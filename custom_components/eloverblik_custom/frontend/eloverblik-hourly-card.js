@@ -337,8 +337,12 @@ class EloverblikHourlyCard extends HTMLElement {
       >
         <strong>${this._escapeHtml(this._formatKwh(point.kwh))}</strong>
         <div class="tooltip-row">
-          <span class="tooltip-label">Local hour</span>
-          <span>${this._escapeHtml(this._formatInterval(point))}</span>
+          <span class="tooltip-label">Local start</span>
+          <span>${this._escapeHtml(this._formatLocalDateTime(point.localStartMs, point.apiStartMs))}</span>
+        </div>
+        <div class="tooltip-row">
+          <span class="tooltip-label">Local end</span>
+          <span>${this._escapeHtml(this._formatLocalDateTime(point.localEndMs, point.apiEndMs))}</span>
         </div>
       </div>
     `;
@@ -470,10 +474,6 @@ class EloverblikHourlyCard extends HTMLElement {
       hour: "numeric",
       minute: "2-digit",
     }).format(date);
-  }
-
-  _formatInterval(point) {
-    return `${this._formatLocalDateTime(point.localStartMs, point.apiStartMs)} -> ${this._formatLocalDateTime(point.localEndMs, point.apiEndMs)}`;
   }
 
   _formatKwh(value) {
