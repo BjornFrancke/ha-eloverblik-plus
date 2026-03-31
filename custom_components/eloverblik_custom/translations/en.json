@@ -8,6 +8,13 @@
           "refresh_token": "Refresh Token",
           "metering_point": "Metering Point ID"
         }
+      },
+      "reauth_confirm": {
+        "title": "Reconnect Eloverblik",
+        "description": "Enter a new refresh token for metering point {metering_point}.",
+        "data": {
+          "refresh_token": "Refresh Token"
+        }
       }
     },
     "error": {
@@ -16,7 +23,8 @@
       "unknown": "Unexpected error occurred."
     },
     "abort": {
-      "already_configured": "This metering point is already configured."
+      "already_configured": "This metering point is already configured.",
+      "reauth_successful": "Re-authentication was successful."
     }
   }
 }

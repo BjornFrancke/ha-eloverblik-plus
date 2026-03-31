@@ -4,9 +4,10 @@ from __future__ import annotations
 
 from unittest.mock import AsyncMock, patch
 
-from homeassistant.config_entries import SOURCE_USER
+from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_USER
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from custom_components.eloverblik_custom.api import (
     EloverblikAuthError,
@@ -159,3 +160,87 @@ async def test_duplicate_entry(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
+
+
+async def test_reauth_flow_success(
+    hass: HomeAssistant,
+    enable_custom_integrations: None,
+) -> None:
+    """Test successful reauthentication."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title=f"Eloverblik ({MOCK_METERING_POINT})",
+        data={
+            CONF_REFRESH_TOKEN: MOCK_REFRESH_TOKEN,
+            CONF_METERING_POINT: MOCK_METERING_POINT,
+        },
+        unique_id=MOCK_METERING_POINT,
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_REAUTH, "entry_id": entry.entry_id},
+        data=entry.data,
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+
+    with (
+        patch(
+            "custom_components.eloverblik_custom.config_flow.EloverblikApiClient",
+        ) as mock_client_class,
+        patch.object(hass.config_entries, "async_reload", AsyncMock(return_value=True)),
+    ):
+        mock_client = mock_client_class.return_value
+        mock_client.async_get_access_token = AsyncMock(return_value=MOCK_ACCESS_TOKEN)
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={CONF_REFRESH_TOKEN: "new_refresh_token"},
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert entry.data[CONF_REFRESH_TOKEN] == "new_refresh_token"
+
+
+async def test_reauth_flow_invalid_auth(
+    hass: HomeAssistant,
+    enable_custom_integrations: None,
+) -> None:
+    """Test reauthentication with invalid credentials."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title=f"Eloverblik ({MOCK_METERING_POINT})",
+        data={
+            CONF_REFRESH_TOKEN: MOCK_REFRESH_TOKEN,
+            CONF_METERING_POINT: MOCK_METERING_POINT,
+        },
+        unique_id=MOCK_METERING_POINT,
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_REAUTH, "entry_id": entry.entry_id},
+        data=entry.data,
+    )
+
+    with patch(
+        "custom_components.eloverblik_custom.config_flow.EloverblikApiClient",
+    ) as mock_client_class:
+        mock_client = mock_client_class.return_value
+        mock_client.async_get_access_token = AsyncMock(
+            side_effect=EloverblikAuthError("Invalid token")
+        )
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={CONF_REFRESH_TOKEN: "bad_token"},
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+    assert result["errors"] == {"base": "auth"}

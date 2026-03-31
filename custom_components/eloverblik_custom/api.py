@@ -4,10 +4,13 @@ from __future__ import annotations
 
 from datetime import datetime, timedelta
 from typing import Any
+from zoneinfo import ZoneInfo
 
 import aiohttp
 
 from .const import API_METER_DATA_URL, API_TOKEN_URL, DEFAULT_HISTORY_DAYS, LOGGER
+
+LOCAL_TIME_ZONE = ZoneInfo("Europe/Copenhagen")
 
 
 class EloverblikError(Exception):
@@ -109,7 +112,14 @@ class EloverblikApiClient:
             LOGGER.warning("No results in API response")
             return empty
 
-        market_doc = result_list[0].get("MyEnergyData_MarketDocument", {})
+        result = result_list[0]
+        success = result.get("success")
+        error_code = result.get("errorCode")
+        if success is False or (error_code is not None and error_code != 10000):
+            error_text = result.get("errorText", "Unknown API error")
+            raise EloverblikError(f"Eloverblik API error {error_code}: {error_text}")
+
+        market_doc = result.get("MyEnergyData_MarketDocument", {})
         time_series = market_doc.get("TimeSeries", [])
 
         if not time_series:
@@ -126,12 +136,15 @@ class EloverblikApiClient:
 
         for period in periods:
             start_time_str = period["timeInterval"]["start"]
-            start_time = datetime.strptime(start_time_str, "%Y-%m-%dT%H:%M:%SZ")
+            start_time = datetime.fromisoformat(start_time_str.replace("Z", "+00:00"))
             day_total = 0.0
+            local_start = start_time.astimezone(LOCAL_TIME_ZONE)
 
             for point in period.get("Point", []):
                 offset = int(point["position"]) - 1
-                time_slot = start_time + timedelta(hours=offset)
+                time_slot = (start_time + timedelta(hours=offset)).astimezone(
+                    LOCAL_TIME_ZONE
+                )
                 quantity = float(point["out_Quantity.quantity"])
                 day_total += quantity
                 hourly.append(
@@ -142,7 +155,7 @@ class EloverblikApiClient:
                 )
 
             # Key by the local date of the period start
-            day_key = start_time.strftime("%Y-%m-%d")
+            day_key = local_start.strftime("%Y-%m-%d")
             daily[day_key] = round(day_total, 3)
             total_kwh += day_total
 

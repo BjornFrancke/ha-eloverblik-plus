@@ -1,0 +1,44 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install -e .[dev]
+
+      - name: Run Ruff lint
+        run: ruff check custom_components tests
+
+      - name: Run Ruff format check
+        run: ruff format --check custom_components tests
+
+      - name: Run pytest
+        run: pytest
+
+  hacs:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Validate HACS metadata
+        uses: hacs/action@main
+        with:
+          category: integration

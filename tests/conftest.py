@@ -19,14 +19,17 @@ MOCK_ACCESS_TOKEN = "test_access_token"
 MOCK_TIME_SERIES_RESPONSE = {
     "result": [
         {
+            "success": True,
+            "errorCode": 10000,
+            "errorText": "NoError",
             "MyEnergyData_MarketDocument": {
                 "TimeSeries": [
                     {
                         "Period": [
                             {
                                 "timeInterval": {
-                                    "start": "2024-01-01T00:00:00Z",
-                                    "end": "2024-01-02T00:00:00Z",
+                                    "start": "2024-01-01T23:00:00Z",
+                                    "end": "2024-01-02T23:00:00Z",
                                 },
                                 "Point": [
                                     {
@@ -45,8 +48,8 @@ MOCK_TIME_SERIES_RESPONSE = {
                             },
                             {
                                 "timeInterval": {
-                                    "start": "2024-01-02T00:00:00Z",
-                                    "end": "2024-01-03T00:00:00Z",
+                                    "start": "2024-01-02T23:00:00Z",
+                                    "end": "2024-01-03T23:00:00Z",
                                 },
                                 "Point": [
                                     {
@@ -62,7 +65,7 @@ MOCK_TIME_SERIES_RESPONSE = {
                         ]
                     }
                 ]
-            }
+            },
         }
     ]
 }
@@ -93,15 +96,15 @@ def mock_eloverblik_api() -> Generator[AsyncMock]:
             return_value={
                 "total_kwh": 2.0,
                 "hourly": [
-                    {"timestamp": "2024-01-01T00:00:00", "kwh": 0.5},
-                    {"timestamp": "2024-01-01T01:00:00", "kwh": 0.3},
-                    {"timestamp": "2024-01-01T02:00:00", "kwh": 0.2},
-                    {"timestamp": "2024-01-02T00:00:00", "kwh": 0.4},
-                    {"timestamp": "2024-01-02T01:00:00", "kwh": 0.6},
+                    {"timestamp": "2024-01-02T00:00:00+01:00", "kwh": 0.5},
+                    {"timestamp": "2024-01-02T01:00:00+01:00", "kwh": 0.3},
+                    {"timestamp": "2024-01-02T02:00:00+01:00", "kwh": 0.2},
+                    {"timestamp": "2024-01-03T00:00:00+01:00", "kwh": 0.4},
+                    {"timestamp": "2024-01-03T01:00:00+01:00", "kwh": 0.6},
                 ],
                 "daily": {
-                    "2024-01-01": 1.0,
                     "2024-01-02": 1.0,
+                    "2024-01-03": 1.0,
                 },
             }
         )
