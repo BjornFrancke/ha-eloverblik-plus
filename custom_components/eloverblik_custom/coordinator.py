@@ -2,13 +2,25 @@
 
 from __future__ import annotations
 
-from datetime import timedelta
+from datetime import datetime, timedelta
 from typing import Any
 
+from homeassistant.components.recorder import get_instance
+from homeassistant.components.recorder.models import (
+    StatisticData,
+    StatisticMeanType,
+    StatisticMetaData,
+)
+from homeassistant.components.recorder.statistics import (
+    async_add_external_statistics,
+    get_last_statistics,
+)
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import UnitOfEnergy
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.util.unit_conversion import EnergyConverter
 
 from .api import EloverblikApiClient, EloverblikAuthError, EloverblikError
 from .const import DEFAULT_SCAN_INTERVAL, DOMAIN, LOGGER
@@ -33,10 +45,72 @@ class EloverblikDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         )
         self.client = client
 
+    def _get_statistic_id(self) -> str:
+        """Return the statistic ID for hourly consumption imports."""
+        return f"{DOMAIN}:{self.client.metering_point}_hourly_consumption"
+
+    async def _async_import_hourly_statistics(self, data: dict[str, Any]) -> None:
+        """Import hourly consumption points into Home Assistant statistics."""
+        hourly = data.get("hourly", [])
+        if not hourly:
+            return
+
+        try:
+            recorder = get_instance(self.hass)
+        except KeyError:
+            return
+
+        statistic_id = self._get_statistic_id()
+        last_stats = await recorder.async_add_executor_job(
+            get_last_statistics,
+            self.hass,
+            1,
+            statistic_id,
+            True,
+            {"sum"},
+        )
+
+        running_sum = 0.0
+        last_stat_start: datetime | None = None
+        if last_stats and statistic_id in last_stats:
+            last_stat = last_stats[statistic_id][0]
+            running_sum = float(last_stat.get("sum", 0.0))
+            first_hour_start = datetime.fromisoformat(hourly[0]["start"])
+            last_stat_start = datetime.fromtimestamp(
+                last_stat["start"], tz=first_hour_start.tzinfo
+            )
+
+        statistics: list[StatisticData] = []
+        for entry in hourly:
+            start_dt = datetime.fromisoformat(entry["start"])
+            if last_stat_start is not None and start_dt <= last_stat_start:
+                continue
+
+            running_sum += entry["kwh"]
+            statistics.append(
+                StatisticData(start=start_dt, state=entry["kwh"], sum=running_sum)
+            )
+
+        if not statistics:
+            return
+
+        metadata = StatisticMetaData(
+            mean_type=StatisticMeanType.NONE,
+            has_sum=True,
+            name=f"{self.client.metering_point} hourly consumption",
+            source=DOMAIN,
+            statistic_id=statistic_id,
+            unit_class=EnergyConverter.UNIT_CLASS,
+            unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        )
+        async_add_external_statistics(self.hass, metadata, statistics)
+
     async def _async_update_data(self) -> dict[str, Any]:
         """Fetch data from the Eloverblik API."""
         try:
-            return await self.client.async_get_latest_consumption()
+            data = await self.client.async_get_latest_consumption()
+            await self._async_import_hourly_statistics(data)
+            return data
         except EloverblikAuthError as err:
             raise ConfigEntryAuthFailed(f"Authentication failed: {err}") from err
         except EloverblikError as err:

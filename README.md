@@ -8,7 +8,9 @@ from Eloverblik / Energinet.
 - Config flow setup from the Home Assistant UI
 - Uses your Eloverblik refresh token and metering point ID
 - Fetches hourly consumption data from the Eloverblik API
-- Exposes a sensor with total consumption plus hourly and daily breakdowns
+- Exposes a sensor for the latest hourly consumption reading
+- Preserves the fetched hourly points with start/end timestamps
+- Imports hourly consumption into Home Assistant statistics for native history use
 - Supports reauthentication when your refresh token changes
 
 ## Installation
@@ -45,13 +47,21 @@ You can get your refresh token and metering point information from
 
 The integration creates one sensor per metering point:
 
-- `Energy consumption`
+- `Latest hourly consumption`
 
 The sensor includes extra attributes:
 
 - `metering_point`
+- `latest_hour_start`
+- `latest_hour_end`
+- `window_total_kwh`
 - `hourly_data`
 - `daily_data`
+
+`hourly_data` contains the fetched Eloverblik interval points exactly as hourly
+readings with `start`, `end`, and `kwh` fields. The integration also imports
+those hourly points into Home Assistant statistics using a stable external
+statistics ID so they can be graphed and reused natively by Home Assistant.
 
 ## Development
 

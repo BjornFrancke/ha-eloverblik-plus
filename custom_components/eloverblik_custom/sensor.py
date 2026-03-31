@@ -37,12 +37,12 @@ async def async_setup_entry(
 class EloverblikEnergySensor(
     CoordinatorEntity[EloverblikDataUpdateCoordinator], SensorEntity
 ):
-    """Sensor for Eloverblik electricity consumption."""
+    """Sensor for the latest hourly Eloverblik electricity consumption."""
 
     _attr_has_entity_name = True
-    _attr_name = "Energy consumption"
+    _attr_name = "Latest hourly consumption"
     _attr_device_class = SensorDeviceClass.ENERGY
-    _attr_state_class = SensorStateClass.TOTAL_INCREASING
+    _attr_state_class = SensorStateClass.MEASUREMENT
     _attr_native_unit_of_measurement = UnitOfEnergy.KILO_WATT_HOUR
     _attr_attribution = ATTRIBUTION
 
@@ -64,22 +64,25 @@ class EloverblikEnergySensor(
 
     @property
     def native_value(self) -> float | None:
-        """Return the total daily consumption in kWh."""
+        """Return the latest hourly consumption in kWh."""
         if self.coordinator.data is None:
             return None
-        return self.coordinator.data.get("total_kwh")
+        return self.coordinator.data.get("latest_hour_kwh")
 
     @property
     def extra_state_attributes(self) -> dict[str, Any] | None:
-        """Return hourly and daily consumption breakdown."""
+        """Return the fetched hourly and daily consumption breakdown."""
         if self.coordinator.data is None:
             return None
+
+        latest_hour = self.coordinator.data.get("latest_hour")
         hourly = self.coordinator.data.get("hourly", [])
         daily = self.coordinator.data.get("daily", {})
-        if not hourly:
-            return None
         return {
             "metering_point": self._metering_point,
+            "latest_hour_start": latest_hour["start"] if latest_hour else None,
+            "latest_hour_end": latest_hour["end"] if latest_hour else None,
+            "window_total_kwh": self.coordinator.data.get("window_total_kwh"),
             "hourly_data": hourly,
             "daily_data": daily,
         }

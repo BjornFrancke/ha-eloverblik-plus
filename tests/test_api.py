@@ -13,15 +13,23 @@ def test_parse_time_series_multi_period() -> None:
     """Test parsing a response with multiple periods."""
     result = EloverblikApiClient._parse_time_series(MOCK_TIME_SERIES_RESPONSE)
 
-    assert result["total_kwh"] == 2.0
+    assert result["latest_hour_kwh"] == 0.6
+    assert result["window_total_kwh"] == 2.0
     assert len(result["hourly"]) == 5
     assert result["hourly"][0] == {
-        "timestamp": "2024-01-02T00:00:00+01:00",
+        "start": "2024-01-02T00:00:00+01:00",
+        "end": "2024-01-02T01:00:00+01:00",
         "kwh": 0.5,
     }
     assert result["hourly"][3] == {
-        "timestamp": "2024-01-03T00:00:00+01:00",
+        "start": "2024-01-03T00:00:00+01:00",
+        "end": "2024-01-03T01:00:00+01:00",
         "kwh": 0.4,
+    }
+    assert result["latest_hour"] == {
+        "start": "2024-01-03T01:00:00+01:00",
+        "end": "2024-01-03T02:00:00+01:00",
+        "kwh": 0.6,
     }
 
     assert result["daily"] == {
@@ -34,7 +42,13 @@ def test_parse_time_series_empty_result() -> None:
     """Test parsing an empty API response."""
     result = EloverblikApiClient._parse_time_series({"result": []})
 
-    assert result == {"total_kwh": 0.0, "hourly": [], "daily": {}}
+    assert result == {
+        "latest_hour": None,
+        "latest_hour_kwh": None,
+        "window_total_kwh": 0.0,
+        "hourly": [],
+        "daily": {},
+    }
 
 
 def test_parse_time_series_no_time_series() -> None:
@@ -42,7 +56,13 @@ def test_parse_time_series_no_time_series() -> None:
     data = {"result": [{"MyEnergyData_MarketDocument": {"TimeSeries": []}}]}
     result = EloverblikApiClient._parse_time_series(data)
 
-    assert result == {"total_kwh": 0.0, "hourly": [], "daily": {}}
+    assert result == {
+        "latest_hour": None,
+        "latest_hour_kwh": None,
+        "window_total_kwh": 0.0,
+        "hourly": [],
+        "daily": {},
+    }
 
 
 def test_parse_time_series_no_periods() -> None:
@@ -52,7 +72,13 @@ def test_parse_time_series_no_periods() -> None:
     }
     result = EloverblikApiClient._parse_time_series(data)
 
-    assert result == {"total_kwh": 0.0, "hourly": [], "daily": {}}
+    assert result == {
+        "latest_hour": None,
+        "latest_hour_kwh": None,
+        "window_total_kwh": 0.0,
+        "hourly": [],
+        "daily": {},
+    }
 
 
 def test_parse_time_series_single_period() -> None:
@@ -91,9 +117,11 @@ def test_parse_time_series_single_period() -> None:
     }
     result = EloverblikApiClient._parse_time_series(data)
 
-    assert result["total_kwh"] == 4.0
+    assert result["latest_hour_kwh"] == 2.5
+    assert result["window_total_kwh"] == 4.0
     assert len(result["hourly"]) == 2
-    assert result["hourly"][0]["timestamp"] == "2024-03-15T00:00:00+01:00"
+    assert result["hourly"][0]["start"] == "2024-03-15T00:00:00+01:00"
+    assert result["hourly"][1]["end"] == "2024-03-15T02:00:00+01:00"
     assert result["daily"] == {"2024-03-15": 4.0}
 
 
@@ -137,7 +165,7 @@ def test_parse_time_series_rounding() -> None:
     }
     result = EloverblikApiClient._parse_time_series(data)
 
-    assert result["total_kwh"] == 0.999
+    assert result["window_total_kwh"] == 0.999
     assert result["daily"]["2024-01-02"] == 0.999
 
 
@@ -184,9 +212,21 @@ def test_parse_time_series_dst_day() -> None:
 
     assert result["daily"] == {"2026-03-29": 0.6}
     assert result["hourly"] == [
-        {"timestamp": "2026-03-29T00:00:00+01:00", "kwh": 0.1},
-        {"timestamp": "2026-03-29T01:00:00+01:00", "kwh": 0.2},
-        {"timestamp": "2026-03-29T03:00:00+02:00", "kwh": 0.3},
+        {
+            "start": "2026-03-29T00:00:00+01:00",
+            "end": "2026-03-29T01:00:00+01:00",
+            "kwh": 0.1,
+        },
+        {
+            "start": "2026-03-29T01:00:00+01:00",
+            "end": "2026-03-29T03:00:00+02:00",
+            "kwh": 0.2,
+        },
+        {
+            "start": "2026-03-29T03:00:00+02:00",
+            "end": "2026-03-29T04:00:00+02:00",
+            "kwh": 0.3,
+        },
     ]
 
 

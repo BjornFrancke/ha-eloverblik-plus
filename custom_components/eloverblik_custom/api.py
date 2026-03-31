@@ -39,6 +39,11 @@ class EloverblikApiClient:
         self._refresh_token = refresh_token
         self._metering_point = metering_point
 
+    @property
+    def metering_point(self) -> str:
+        """Return the configured metering point ID."""
+        return self._metering_point
+
     async def async_get_access_token(self) -> str:
         """Exchange refresh token for an access token."""
         headers = {"Authorization": f"Bearer {self._refresh_token}"}
@@ -92,7 +97,7 @@ class EloverblikApiClient:
     async def async_get_latest_consumption(self) -> dict[str, Any]:
         """Fetch the latest consumption data.
 
-        Returns a dict with 'total_kwh' and 'hourly' keys.
+        Returns the latest hourly reading plus hourly and daily breakdowns.
         """
         access_token = await self.async_get_access_token()
         data = await self.async_get_time_series(access_token)
@@ -105,7 +110,13 @@ class EloverblikApiClient:
         Iterates over all periods (days) in the response, building a
         chronological hourly list and per-day totals.
         """
-        empty: dict[str, Any] = {"total_kwh": 0.0, "hourly": [], "daily": {}}
+        empty: dict[str, Any] = {
+            "latest_hour": None,
+            "latest_hour_kwh": None,
+            "window_total_kwh": 0.0,
+            "hourly": [],
+            "daily": {},
+        }
 
         result_list = data.get("result", [])
         if not result_list:
@@ -142,14 +153,16 @@ class EloverblikApiClient:
 
             for point in period.get("Point", []):
                 offset = int(point["position"]) - 1
-                time_slot = (start_time + timedelta(hours=offset)).astimezone(
-                    LOCAL_TIME_ZONE
-                )
+                point_start = start_time + timedelta(hours=offset)
+                point_end = point_start + timedelta(hours=1)
+                time_slot = point_start.astimezone(LOCAL_TIME_ZONE)
+                end_slot = point_end.astimezone(LOCAL_TIME_ZONE)
                 quantity = float(point["out_Quantity.quantity"])
                 day_total += quantity
                 hourly.append(
                     {
-                        "timestamp": time_slot.isoformat(),
+                        "start": time_slot.isoformat(),
+                        "end": end_slot.isoformat(),
                         "kwh": quantity,
                     }
                 )
@@ -159,8 +172,12 @@ class EloverblikApiClient:
             daily[day_key] = round(day_total, 3)
             total_kwh += day_total
 
+        latest_hour = hourly[-1] if hourly else None
+
         return {
-            "total_kwh": round(total_kwh, 3),
+            "latest_hour": latest_hour,
+            "latest_hour_kwh": latest_hour["kwh"] if latest_hour else None,
+            "window_total_kwh": round(total_kwh, 3),
             "hourly": hourly,
             "daily": daily,
         }

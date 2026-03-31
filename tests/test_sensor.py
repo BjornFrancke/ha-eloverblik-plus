@@ -23,19 +23,40 @@ def test_sensor_exposes_consumption_state_and_attributes() -> None:
     sensor = EloverblikEnergySensor(
         _build_coordinator(
             {
-                "total_kwh": 2.0,
-                "hourly": [{"timestamp": "2024-01-02T00:00:00+01:00", "kwh": 0.5}],
+                "latest_hour": {
+                    "start": "2024-01-02T00:00:00+01:00",
+                    "end": "2024-01-02T01:00:00+01:00",
+                    "kwh": 0.5,
+                },
+                "latest_hour_kwh": 0.5,
+                "window_total_kwh": 2.0,
+                "hourly": [
+                    {
+                        "start": "2024-01-02T00:00:00+01:00",
+                        "end": "2024-01-02T01:00:00+01:00",
+                        "kwh": 0.5,
+                    }
+                ],
                 "daily": {"2024-01-02": 2.0},
             }
         ),
         "571313174200318497",
     )
 
-    assert sensor.native_value == 2.0
-    assert sensor.state_class is SensorStateClass.TOTAL_INCREASING
+    assert sensor.native_value == 0.5
+    assert sensor.state_class is SensorStateClass.MEASUREMENT
     assert sensor.extra_state_attributes == {
         "metering_point": "571313174200318497",
-        "hourly_data": [{"timestamp": "2024-01-02T00:00:00+01:00", "kwh": 0.5}],
+        "latest_hour_start": "2024-01-02T00:00:00+01:00",
+        "latest_hour_end": "2024-01-02T01:00:00+01:00",
+        "window_total_kwh": 2.0,
+        "hourly_data": [
+            {
+                "start": "2024-01-02T00:00:00+01:00",
+                "end": "2024-01-02T01:00:00+01:00",
+                "kwh": 0.5,
+            }
+        ],
         "daily_data": {"2024-01-02": 2.0},
     }
 
@@ -48,11 +69,26 @@ def test_sensor_returns_none_without_data() -> None:
     assert sensor.extra_state_attributes is None
 
 
-def test_sensor_hides_empty_hourly_breakdown() -> None:
-    """Test the sensor omits attributes when there is no hourly data."""
+def test_sensor_keeps_empty_hourly_breakdown() -> None:
+    """Test the sensor keeps the data shape even without hourly readings."""
     sensor = EloverblikEnergySensor(
-        _build_coordinator({"total_kwh": 0.0, "hourly": [], "daily": {}}),
+        _build_coordinator(
+            {
+                "latest_hour": None,
+                "latest_hour_kwh": None,
+                "window_total_kwh": 0.0,
+                "hourly": [],
+                "daily": {},
+            }
+        ),
         "571313174200318497",
     )
 
-    assert sensor.extra_state_attributes is None
+    assert sensor.extra_state_attributes == {
+        "metering_point": "571313174200318497",
+        "latest_hour_start": None,
+        "latest_hour_end": None,
+        "window_total_kwh": 0.0,
+        "hourly_data": [],
+        "daily_data": {},
+    }
