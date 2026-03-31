@@ -95,6 +95,8 @@ def mock_eloverblik_api() -> Generator[AsyncMock]:
         mock_client.async_get_latest_consumption = AsyncMock(
             return_value={
                 "latest_hour": {
+                    "api_start_utc": "2024-01-03T00:00:00Z",
+                    "api_end_utc": "2024-01-03T01:00:00Z",
                     "start": "2024-01-03T01:00:00+01:00",
                     "end": "2024-01-03T02:00:00+01:00",
                     "kwh": 0.6,
@@ -103,26 +105,36 @@ def mock_eloverblik_api() -> Generator[AsyncMock]:
                 "window_total_kwh": 2.0,
                 "hourly": [
                     {
+                        "api_start_utc": "2024-01-01T23:00:00Z",
+                        "api_end_utc": "2024-01-02T00:00:00Z",
                         "start": "2024-01-02T00:00:00+01:00",
                         "end": "2024-01-02T01:00:00+01:00",
                         "kwh": 0.5,
                     },
                     {
+                        "api_start_utc": "2024-01-02T00:00:00Z",
+                        "api_end_utc": "2024-01-02T01:00:00Z",
                         "start": "2024-01-02T01:00:00+01:00",
                         "end": "2024-01-02T02:00:00+01:00",
                         "kwh": 0.3,
                     },
                     {
+                        "api_start_utc": "2024-01-02T01:00:00Z",
+                        "api_end_utc": "2024-01-02T02:00:00Z",
                         "start": "2024-01-02T02:00:00+01:00",
                         "end": "2024-01-02T03:00:00+01:00",
                         "kwh": 0.2,
                     },
                     {
+                        "api_start_utc": "2024-01-02T23:00:00Z",
+                        "api_end_utc": "2024-01-03T00:00:00Z",
                         "start": "2024-01-03T00:00:00+01:00",
                         "end": "2024-01-03T01:00:00+01:00",
                         "kwh": 0.4,
                     },
                     {
+                        "api_start_utc": "2024-01-03T00:00:00Z",
+                        "api_end_utc": "2024-01-03T01:00:00Z",
                         "start": "2024-01-03T01:00:00+01:00",
                         "end": "2024-01-03T02:00:00+01:00",
                         "kwh": 0.6,

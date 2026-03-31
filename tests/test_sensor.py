@@ -2,11 +2,15 @@
 
 from __future__ import annotations
 
+from datetime import UTC, datetime
 from unittest.mock import Mock
 
 from homeassistant.components.sensor import SensorStateClass
 
-from custom_components.eloverblik_custom.sensor import EloverblikEnergySensor
+from custom_components.eloverblik_custom.sensor import (
+    EloverblikEnergySensor,
+    EloverblikLatestHourStartSensor,
+)
 
 
 def _build_coordinator(data: dict | None) -> Mock:
@@ -101,4 +105,56 @@ def test_sensor_keeps_empty_hourly_breakdown() -> None:
         "window_total_kwh": 0.0,
         "hourly_data": [],
         "daily_data": {},
+    }
+
+
+def test_timestamp_sensor_exposes_latest_api_hour() -> None:
+    """Test the built-in timestamp sensor exposes the API hour start."""
+    sensor = EloverblikLatestHourStartSensor(
+        _build_coordinator(
+            {
+                "latest_hour": {
+                    "api_start_utc": "2024-01-01T23:00:00Z",
+                    "api_end_utc": "2024-01-02T00:00:00Z",
+                    "start": "2024-01-02T00:00:00+01:00",
+                    "end": "2024-01-02T01:00:00+01:00",
+                    "kwh": 0.5,
+                },
+                "latest_hour_kwh": 0.5,
+                "window_total_kwh": 2.0,
+                "hourly": [],
+                "daily": {},
+            }
+        ),
+        "571313174200318497",
+    )
+
+    assert sensor.native_value == datetime(2024, 1, 1, 23, 0, tzinfo=UTC)
+    assert sensor.extra_state_attributes == {
+        "api_end_utc": "2024-01-02T00:00:00Z",
+        "local_start": "2024-01-02T00:00:00+01:00",
+        "local_end": "2024-01-02T01:00:00+01:00",
+    }
+
+
+def test_timestamp_sensor_handles_missing_latest_hour() -> None:
+    """Test the timestamp sensor keeps a consistent empty shape."""
+    sensor = EloverblikLatestHourStartSensor(
+        _build_coordinator(
+            {
+                "latest_hour": None,
+                "latest_hour_kwh": None,
+                "window_total_kwh": 0.0,
+                "hourly": [],
+                "daily": {},
+            }
+        ),
+        "571313174200318497",
+    )
+
+    assert sensor.native_value is None
+    assert sensor.extra_state_attributes == {
+        "api_end_utc": None,
+        "local_start": None,
+        "local_end": None,
     }

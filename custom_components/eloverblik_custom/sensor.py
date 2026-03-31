@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from datetime import datetime
 from typing import Any
 
 from homeassistant.components.sensor import (
@@ -25,25 +26,24 @@ async def async_setup_entry(
     entry: EloverblikConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up Eloverblik sensor based on a config entry."""
+    """Set up Eloverblik sensors based on a config entry."""
     coordinator = entry.runtime_data.coordinator
     metering_point = entry.data[CONF_METERING_POINT]
 
     async_add_entities(
-        [EloverblikEnergySensor(coordinator, metering_point)],
+        [
+            EloverblikEnergySensor(coordinator, metering_point),
+            EloverblikLatestHourStartSensor(coordinator, metering_point),
+        ],
     )
 
 
-class EloverblikEnergySensor(
+class EloverblikBaseSensor(
     CoordinatorEntity[EloverblikDataUpdateCoordinator], SensorEntity
 ):
-    """Sensor for the latest hourly Eloverblik electricity consumption."""
+    """Shared base entity for Eloverblik sensors."""
 
     _attr_has_entity_name = True
-    _attr_name = "Latest hourly consumption"
-    _attr_device_class = SensorDeviceClass.ENERGY
-    _attr_state_class = SensorStateClass.MEASUREMENT
-    _attr_native_unit_of_measurement = UnitOfEnergy.KILO_WATT_HOUR
     _attr_attribution = ATTRIBUTION
 
     def __init__(
@@ -51,16 +51,33 @@ class EloverblikEnergySensor(
         coordinator: EloverblikDataUpdateCoordinator,
         metering_point: str,
     ) -> None:
-        """Initialize the sensor."""
+        """Initialize common sensor metadata."""
         super().__init__(coordinator)
         self._metering_point = metering_point
-        self._attr_unique_id = f"{metering_point}_energy"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, metering_point)},
             name=f"Eloverblik {metering_point}",
             entry_type=DeviceEntryType.SERVICE,
             manufacturer="Energinet",
         )
+
+
+class EloverblikEnergySensor(EloverblikBaseSensor):
+    """Sensor for the latest hourly Eloverblik electricity consumption."""
+
+    _attr_name = "Latest hourly consumption"
+    _attr_device_class = SensorDeviceClass.ENERGY
+    _attr_state_class = SensorStateClass.MEASUREMENT
+    _attr_native_unit_of_measurement = UnitOfEnergy.KILO_WATT_HOUR
+
+    def __init__(
+        self,
+        coordinator: EloverblikDataUpdateCoordinator,
+        metering_point: str,
+    ) -> None:
+        """Initialize the energy sensor."""
+        super().__init__(coordinator, metering_point)
+        self._attr_unique_id = f"{metering_point}_energy"
 
     @property
     def native_value(self) -> float | None:
@@ -81,14 +98,66 @@ class EloverblikEnergySensor(
         return {
             "metering_point": self._metering_point,
             "latest_hour_api_start_utc": (
-                latest_hour["api_start_utc"] if latest_hour else None
+                latest_hour.get("api_start_utc") if latest_hour else None
             ),
             "latest_hour_api_end_utc": (
-                latest_hour["api_end_utc"] if latest_hour else None
+                latest_hour.get("api_end_utc") if latest_hour else None
             ),
-            "latest_hour_start": latest_hour["start"] if latest_hour else None,
-            "latest_hour_end": latest_hour["end"] if latest_hour else None,
+            "latest_hour_start": latest_hour.get("start") if latest_hour else None,
+            "latest_hour_end": latest_hour.get("end") if latest_hour else None,
             "window_total_kwh": self.coordinator.data.get("window_total_kwh"),
             "hourly_data": hourly,
             "daily_data": daily,
+        }
+
+
+class EloverblikLatestHourStartSensor(EloverblikBaseSensor):
+    """Timestamp sensor for the latest hourly API interval start."""
+
+    _attr_name = "Latest hourly interval start"
+    _attr_device_class = SensorDeviceClass.TIMESTAMP
+
+    def __init__(
+        self,
+        coordinator: EloverblikDataUpdateCoordinator,
+        metering_point: str,
+    ) -> None:
+        """Initialize the timestamp sensor."""
+        super().__init__(coordinator, metering_point)
+        self._attr_unique_id = f"{metering_point}_latest_hour_start"
+
+    @property
+    def native_value(self) -> datetime | None:
+        """Return the latest hourly API start as a timezone-aware datetime."""
+        if self.coordinator.data is None:
+            return None
+
+        latest_hour = self.coordinator.data.get("latest_hour")
+        if latest_hour is None:
+            return None
+
+        api_start_utc = latest_hour.get("api_start_utc")
+        if api_start_utc is None:
+            return None
+
+        return datetime.fromisoformat(api_start_utc.replace("Z", "+00:00"))
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any] | None:
+        """Return matching API and local interval metadata."""
+        if self.coordinator.data is None:
+            return None
+
+        latest_hour = self.coordinator.data.get("latest_hour")
+        if latest_hour is None:
+            return {
+                "api_end_utc": None,
+                "local_start": None,
+                "local_end": None,
+            }
+
+        return {
+            "api_end_utc": latest_hour.get("api_end_utc"),
+            "local_start": latest_hour.get("start"),
+            "local_end": latest_hour.get("end"),
         }

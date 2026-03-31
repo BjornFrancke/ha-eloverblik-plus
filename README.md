@@ -45,23 +45,34 @@ You can get your refresh token and metering point information from
 
 ## Data Exposed
 
-The integration creates one sensor per metering point:
+The integration creates two sensors per metering point:
 
 - `Latest hourly consumption`
+- `Latest hourly interval start`
 
-The sensor includes extra attributes:
+`Latest hourly consumption` includes extra attributes:
 
 - `metering_point`
+- `latest_hour_api_start_utc`
+- `latest_hour_api_end_utc`
 - `latest_hour_start`
 - `latest_hour_end`
 - `window_total_kwh`
 - `hourly_data`
 - `daily_data`
 
+`Latest hourly interval start` is a timestamp sensor that surfaces the API hour
+used for the latest reading directly in Home Assistant. Its attributes include:
+
+- `api_end_utc`
+- `local_start`
+- `local_end`
+
 `hourly_data` contains the fetched Eloverblik interval points exactly as hourly
-readings with `start`, `end`, and `kwh` fields. The integration also imports
-those hourly points into Home Assistant statistics using a stable external
-statistics ID so they can be graphed and reused natively by Home Assistant.
+readings with `api_start_utc`, `api_end_utc`, `start`, `end`, and `kwh`
+fields. The integration also imports those hourly points into Home Assistant
+statistics using a stable external statistics ID so they can be graphed and
+reused natively by Home Assistant.
 
 ## Development
 

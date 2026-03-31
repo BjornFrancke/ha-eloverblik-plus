@@ -45,6 +45,18 @@ async def test_setup_entry(
         await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert (
+        hass.states.get(
+            "sensor.eloverblik_571313174200000000_latest_hourly_consumption"
+        )
+        is not None
+    )
+    assert (
+        hass.states.get(
+            "sensor.eloverblik_571313174200000000_latest_hourly_interval_start"
+        )
+        is not None
+    )
 
 
 async def test_unload_entry(
