@@ -18,6 +18,7 @@ class EloverblikHourlyCard extends HTMLElement {
     this._config = undefined;
     this._hass = undefined;
     this._hoveredPoint = null;
+    this._selectedHoursToShow = null;
   }
 
   setConfig(config) {
@@ -29,6 +30,7 @@ class EloverblikHourlyCard extends HTMLElement {
       hours_to_show: 24,
       ...config,
     };
+    this._selectedHoursToShow = Number(this._config.hours_to_show) || 24;
     this._render();
   }
 
@@ -58,7 +60,7 @@ class EloverblikHourlyCard extends HTMLElement {
     }
 
     const allPoints = this._getHourlyPoints(stateObj.attributes.hourly_data);
-    const hoursToShow = Number(this._config.hours_to_show);
+    const hoursToShow = this._selectedHoursToShow;
     const points =
       Number.isFinite(hoursToShow) && hoursToShow > 0
         ? allPoints.slice(-hoursToShow)
@@ -75,6 +77,7 @@ class EloverblikHourlyCard extends HTMLElement {
     const chart = this._buildChart(points);
     const latestPoint = points[points.length - 1];
     const tooltipHtml = this._buildTooltip(points);
+    const hoursOptions = this._buildHoursOptions(allPoints.length);
     const summaryHtml = `
       <div class="summary">
         <div>
@@ -84,6 +87,14 @@ class EloverblikHourlyCard extends HTMLElement {
         <div>
           <div class="summary-label">Consumption</div>
           <div class="summary-value">${this._formatKwh(latestPoint.kwh)}</div>
+        </div>
+        <div>
+          <div class="summary-label">Hours to show</div>
+          <label class="hours-select-label">
+            <select id="hours-to-show-select" class="hours-select">
+              ${hoursOptions}
+            </select>
+          </label>
         </div>
       </div>
     `;
@@ -100,6 +111,7 @@ class EloverblikHourlyCard extends HTMLElement {
     );
 
     this._attachPointHandlers(points);
+    this._attachHoursSelector();
   }
 
   _buildFrame(title, body) {
@@ -134,6 +146,21 @@ class EloverblikHourlyCard extends HTMLElement {
           font-size: 1rem;
           font-weight: 600;
           line-height: 1.4;
+        }
+
+        .hours-select-label {
+          display: inline-block;
+          width: 100%;
+        }
+
+        .hours-select {
+          background: var(--card-background-color);
+          border: 1px solid var(--divider-color);
+          border-radius: 10px;
+          color: var(--primary-text-color);
+          font: inherit;
+          padding: 8px 10px;
+          width: 100%;
         }
 
         .chart-shell {
@@ -382,6 +409,27 @@ class EloverblikHourlyCard extends HTMLElement {
     });
   }
 
+  _attachHoursSelector() {
+    if (!this.shadowRoot) {
+      return;
+    }
+
+    this.shadowRoot
+      .getElementById("hours-to-show-select")
+      ?.addEventListener("change", (event) => {
+        const selectedValue = event.target.value;
+        if (selectedValue === "all") {
+          this._selectedHoursToShow = null;
+        } else {
+          const parsedValue = Number(selectedValue);
+          this._selectedHoursToShow =
+            Number.isFinite(parsedValue) && parsedValue > 0 ? parsedValue : 24;
+        }
+        this._hoveredPoint = null;
+        this._render();
+      });
+  }
+
   _getHourlyPoints(hourlyData) {
     if (!Array.isArray(hourlyData)) {
       return [];
@@ -451,6 +499,35 @@ class EloverblikHourlyCard extends HTMLElement {
   _buildYTicks(min, max, count) {
     const step = (max - min) / count;
     return Array.from({ length: count + 1 }, (_, index) => min + index * step);
+  }
+
+  _buildHoursOptions(totalPoints) {
+    const presets = [6, 12, 24, 48, 72, 168].filter(
+      (value) => value < totalPoints,
+    );
+    const currentValue = this._selectedHoursToShow;
+    const optionValues = [...new Set([...presets, currentValue].filter(Boolean))].sort(
+      (left, right) => left - right,
+    );
+
+    const numericOptions = optionValues
+      .map(
+        (value) => `
+          <option value="${value}" ${
+            currentValue === value ? "selected" : ""
+          }>
+            ${value} hours
+          </option>
+        `,
+      )
+      .join("");
+
+    return `
+      ${numericOptions}
+      <option value="all" ${currentValue === null ? "selected" : ""}>
+        All available
+      </option>
+    `;
   }
 
   _formatAxisLabel(localStartMs, apiStartMs) {

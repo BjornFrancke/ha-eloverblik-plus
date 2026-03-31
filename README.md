@@ -107,8 +107,9 @@ Card behavior:
 
 - Reads the `hourly_data` attribute from `Latest hourly consumption`
 - Uses `api_start_utc` as the plotted timestamp for each point
-- Shows API and local start/end timestamps in the hover tooltip
+- Shows local start and local end timestamps in the hover tooltip
 - Defaults to the latest 24 hourly points, configurable with `hours_to_show`
+- Includes an on-card dropdown to switch the visible hour range quickly
 
 ## Development
 
