@@ -1,0 +1,23 @@
+{
+  "name": "Eloverblik Custom HA Integration",
+  "build": {
+    "dockerfile": "Dockerfile"
+  },
+  "postCreateCommand": "pip install --user -r requirements_test.txt && pip install --user ruff && ln -sf /workspaces/ha-eloverblik/custom_components /workspaces/ha-eloverblik/config/custom_components",
+  "remoteUser": "vscode",
+  "forwardPorts": [8123],
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-python.python",
+        "charliermarsh.ruff",
+        "ms-python.debugpy"
+      ],
+      "settings": {
+        "python.defaultInterpreterPath": "/usr/local/bin/python",
+        "python.testing.pytestEnabled": true,
+        "python.testing.pytestArgs": ["tests"]
+      }
+    }
+  }
+}

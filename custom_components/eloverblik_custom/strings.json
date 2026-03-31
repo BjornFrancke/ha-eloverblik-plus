@@ -1,0 +1,22 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Eloverblik",
+        "description": "Enter your Eloverblik API credentials. You can get a refresh token from https://eloverblik.dk",
+        "data": {
+          "refresh_token": "Refresh Token",
+          "metering_point": "Metering Point ID"
+        }
+      }
+    },
+    "error": {
+      "auth": "Invalid refresh token.",
+      "connection": "Unable to connect to Eloverblik API.",
+      "unknown": "Unexpected error occurred."
+    },
+    "abort": {
+      "already_configured": "This metering point is already configured."
+    }
+  }
+}

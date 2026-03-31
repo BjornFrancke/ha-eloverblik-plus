@@ -1,0 +1,40 @@
+# Legacy script with credentials
+script.py
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+build/
+dist/
+*.egg
+
+# Virtual environment
+venv/
+.venv/
+
+# Test / lint caches
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+coverage.xml
+htmlcov/
+
+# IDE
+.vscode/
+.idea/
+
+# Home Assistant config (dev instance)
+config/*
+!config/configuration.yaml
+
+# Environment / secrets
+.env
+*.env
+secrets.yaml
+
+# OS
+.DS_Store
+Thumbs.db
