@@ -36,9 +36,7 @@ async def test_user_flow_success(
         "custom_components.eloverblik_custom.config_flow.EloverblikApiClient",
     ) as mock_client_class:
         mock_client = mock_client_class.return_value
-        mock_client.async_get_access_token = AsyncMock(
-            return_value=MOCK_ACCESS_TOKEN
-        )
+        mock_client.async_get_access_token = AsyncMock(return_value=MOCK_ACCESS_TOKEN)
 
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -128,9 +126,7 @@ async def test_duplicate_entry(
         "custom_components.eloverblik_custom.config_flow.EloverblikApiClient",
     ) as mock_client_class:
         mock_client = mock_client_class.return_value
-        mock_client.async_get_access_token = AsyncMock(
-            return_value=MOCK_ACCESS_TOKEN
-        )
+        mock_client.async_get_access_token = AsyncMock(return_value=MOCK_ACCESS_TOKEN)
 
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -151,9 +147,7 @@ async def test_duplicate_entry(
         "custom_components.eloverblik_custom.config_flow.EloverblikApiClient",
     ) as mock_client_class:
         mock_client = mock_client_class.return_value
-        mock_client.async_get_access_token = AsyncMock(
-            return_value=MOCK_ACCESS_TOKEN
-        )
+        mock_client.async_get_access_token = AsyncMock(return_value=MOCK_ACCESS_TOKEN)
 
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],

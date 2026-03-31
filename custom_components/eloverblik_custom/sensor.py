@@ -42,7 +42,7 @@ class EloverblikEnergySensor(
     _attr_has_entity_name = True
     _attr_name = "Energy consumption"
     _attr_device_class = SensorDeviceClass.ENERGY
-    _attr_state_class = SensorStateClass.TOTAL_INCREASING
+    _attr_state_class = SensorStateClass.TOTAL
     _attr_native_unit_of_measurement = UnitOfEnergy.KILO_WATT_HOUR
     _attr_attribution = ATTRIBUTION
 
@@ -71,13 +71,15 @@ class EloverblikEnergySensor(
 
     @property
     def extra_state_attributes(self) -> dict[str, Any] | None:
-        """Return hourly consumption breakdown."""
+        """Return hourly and daily consumption breakdown."""
         if self.coordinator.data is None:
             return None
         hourly = self.coordinator.data.get("hourly", [])
+        daily = self.coordinator.data.get("daily", {})
         if not hourly:
             return None
         return {
             "metering_point": self._metering_point,
             "hourly_data": hourly,
+            "daily_data": daily,
         }

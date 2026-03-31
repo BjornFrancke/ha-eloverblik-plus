@@ -14,5 +14,6 @@ API_TOKEN_URL = f"{API_BASE_URL}/Token"
 API_METER_DATA_URL = f"{API_BASE_URL}/MeterData/GetTimeSeries"
 
 DEFAULT_SCAN_INTERVAL = 3600  # 1 hour
+DEFAULT_HISTORY_DAYS = 7
 
 ATTRIBUTION = "Data provided by Eloverblik (Energinet)"

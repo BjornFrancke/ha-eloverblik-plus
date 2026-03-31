@@ -7,7 +7,7 @@ from typing import Any
 
 import aiohttp
 
-from .const import API_METER_DATA_URL, API_TOKEN_URL, LOGGER
+from .const import API_METER_DATA_URL, API_TOKEN_URL, DEFAULT_HISTORY_DAYS, LOGGER
 
 
 class EloverblikError(Exception):
@@ -40,9 +40,7 @@ class EloverblikApiClient:
         """Exchange refresh token for an access token."""
         headers = {"Authorization": f"Bearer {self._refresh_token}"}
         try:
-            async with self._session.get(
-                API_TOKEN_URL, headers=headers
-            ) as response:
+            async with self._session.get(API_TOKEN_URL, headers=headers) as response:
                 if response.status == 401:
                     raise EloverblikAuthError("Invalid refresh token")
                 response.raise_for_status()
@@ -61,7 +59,8 @@ class EloverblikApiClient:
     ) -> dict[str, Any]:
         """Fetch time series data for the metering point."""
         if start_date is None:
-            start_date = (datetime.now() - timedelta(days=2)).strftime("%Y-%m-%d")
+            start = datetime.now() - timedelta(days=DEFAULT_HISTORY_DAYS)
+            start_date = start.strftime("%Y-%m-%d")
         if end_date is None:
             end_date = (datetime.now() + timedelta(days=1)).strftime("%Y-%m-%d")
 
@@ -77,9 +76,7 @@ class EloverblikApiClient:
         }
 
         try:
-            async with self._session.post(
-                url, headers=headers, json=body
-            ) as response:
+            async with self._session.post(url, headers=headers, json=body) as response:
                 if response.status == 401:
                     raise EloverblikAuthError("Access token expired or invalid")
                 response.raise_for_status()
@@ -100,41 +97,57 @@ class EloverblikApiClient:
 
     @staticmethod
     def _parse_time_series(data: dict[str, Any]) -> dict[str, Any]:
-        """Parse the API response into consumption data."""
+        """Parse the API response into consumption data.
+
+        Iterates over all periods (days) in the response, building a
+        chronological hourly list and per-day totals.
+        """
+        empty: dict[str, Any] = {"total_kwh": 0.0, "hourly": [], "daily": {}}
+
         result_list = data.get("result", [])
         if not result_list:
             LOGGER.warning("No results in API response")
-            return {"total_kwh": 0.0, "hourly": []}
+            return empty
 
         market_doc = result_list[0].get("MyEnergyData_MarketDocument", {})
         time_series = market_doc.get("TimeSeries", [])
 
         if not time_series:
             LOGGER.warning("No time series found for metering point")
-            return {"total_kwh": 0.0, "hourly": []}
+            return empty
 
-        # Get the most recent period
         periods = time_series[0].get("Period", [])
         if not periods:
-            return {"total_kwh": 0.0, "hourly": []}
-
-        latest_period = periods[-1]
-        start_time_str = latest_period["timeInterval"]["start"]
-        start_time = datetime.strptime(start_time_str, "%Y-%m-%dT%H:%M:%SZ")
+            return empty
 
         hourly: list[dict[str, Any]] = []
+        daily: dict[str, float] = {}
         total_kwh = 0.0
 
-        for point in latest_period.get("Point", []):
-            offset = int(point["position"]) - 1
-            time_slot = start_time + timedelta(hours=offset)
-            quantity = float(point["out_Quantity.quantity"])
-            total_kwh += quantity
-            hourly.append(
-                {
-                    "timestamp": time_slot.isoformat(),
-                    "kwh": quantity,
-                }
-            )
+        for period in periods:
+            start_time_str = period["timeInterval"]["start"]
+            start_time = datetime.strptime(start_time_str, "%Y-%m-%dT%H:%M:%SZ")
+            day_total = 0.0
 
-        return {"total_kwh": round(total_kwh, 3), "hourly": hourly}
+            for point in period.get("Point", []):
+                offset = int(point["position"]) - 1
+                time_slot = start_time + timedelta(hours=offset)
+                quantity = float(point["out_Quantity.quantity"])
+                day_total += quantity
+                hourly.append(
+                    {
+                        "timestamp": time_slot.isoformat(),
+                        "kwh": quantity,
+                    }
+                )
+
+            # Key by the local date of the period start
+            day_key = start_time.strftime("%Y-%m-%d")
+            daily[day_key] = round(day_total, 3)
+            total_kwh += day_total
+
+        return {
+            "total_kwh": round(total_kwh, 3),
+            "hourly": hourly,
+            "daily": daily,
+        }

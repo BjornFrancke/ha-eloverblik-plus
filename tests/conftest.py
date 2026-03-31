@@ -42,7 +42,23 @@ MOCK_TIME_SERIES_RESPONSE = {
                                         "out_Quantity.quantity": "0.2",
                                     },
                                 ],
-                            }
+                            },
+                            {
+                                "timeInterval": {
+                                    "start": "2024-01-02T00:00:00Z",
+                                    "end": "2024-01-03T00:00:00Z",
+                                },
+                                "Point": [
+                                    {
+                                        "position": "1",
+                                        "out_Quantity.quantity": "0.4",
+                                    },
+                                    {
+                                        "position": "2",
+                                        "out_Quantity.quantity": "0.6",
+                                    },
+                                ],
+                            },
                         ]
                     }
                 ]
@@ -69,20 +85,24 @@ def mock_eloverblik_api() -> Generator[AsyncMock]:
         autospec=True,
     ) as mock_client_class:
         mock_client = mock_client_class.return_value
-        mock_client.async_get_access_token = AsyncMock(
-            return_value=MOCK_ACCESS_TOKEN
-        )
+        mock_client.async_get_access_token = AsyncMock(return_value=MOCK_ACCESS_TOKEN)
         mock_client.async_get_time_series = AsyncMock(
             return_value=MOCK_TIME_SERIES_RESPONSE
         )
         mock_client.async_get_latest_consumption = AsyncMock(
             return_value={
-                "total_kwh": 1.0,
+                "total_kwh": 2.0,
                 "hourly": [
                     {"timestamp": "2024-01-01T00:00:00", "kwh": 0.5},
                     {"timestamp": "2024-01-01T01:00:00", "kwh": 0.3},
                     {"timestamp": "2024-01-01T02:00:00", "kwh": 0.2},
+                    {"timestamp": "2024-01-02T00:00:00", "kwh": 0.4},
+                    {"timestamp": "2024-01-02T01:00:00", "kwh": 0.6},
                 ],
+                "daily": {
+                    "2024-01-01": 1.0,
+                    "2024-01-02": 1.0,
+                },
             }
         )
         yield mock_client

@@ -26,9 +26,7 @@ class EloverblikData:
     coordinator: EloverblikDataUpdateCoordinator
 
 
-async def async_setup_entry(
-    hass: HomeAssistant, entry: EloverblikConfigEntry
-) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: EloverblikConfigEntry) -> bool:
     """Set up Eloverblik Custom from a config entry."""
     session = async_get_clientsession(hass)
     client = EloverblikApiClient(
@@ -47,8 +45,6 @@ async def async_setup_entry(
     return True
 
 
-async def async_unload_entry(
-    hass: HomeAssistant, entry: EloverblikConfigEntry
-) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: EloverblikConfigEntry) -> bool:
     """Unload a config entry."""
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
