@@ -3,9 +3,9 @@
   "name": "Eloverblik Custom",
   "codeowners": [],
   "config_flow": true,
-  "documentation": "https://github.com/bjorn/ha-eloverblik",
+  "documentation": "https://github.com/BjornFrancke/ha-eloverblik",
   "iot_class": "cloud_polling",
-  "issue_tracker": "https://github.com/bjorn/ha-eloverblik/issues",
+  "issue_tracker": "https://github.com/BjornFrancke/ha-eloverblik/issues",
   "requirements": [],
   "version": "0.1.0"
 }
