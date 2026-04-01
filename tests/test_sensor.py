@@ -48,13 +48,13 @@ def test_sensor_exposes_consumption_state_and_attributes() -> None:
                 "daily": {"2024-01-02": 2.0},
             }
         ),
-        "571313174200318497",
+        "999999999999999999",
     )
 
     assert sensor.native_value == 0.5
     assert sensor.state_class is SensorStateClass.MEASUREMENT
     assert sensor.extra_state_attributes == {
-        "metering_point": "571313174200318497",
+        "metering_point": "999999999999999999",
         "latest_hour_api_start_utc": "2024-01-01T23:00:00Z",
         "latest_hour_api_end_utc": "2024-01-02T00:00:00Z",
         "latest_hour_start": "2024-01-02T00:00:00+01:00",
@@ -75,7 +75,7 @@ def test_sensor_exposes_consumption_state_and_attributes() -> None:
 
 def test_sensor_returns_none_without_data() -> None:
     """Test the sensor handles missing coordinator data."""
-    sensor = EloverblikEnergySensor(_build_coordinator(None), "571313174200318497")
+    sensor = EloverblikEnergySensor(_build_coordinator(None), "999999999999999999")
 
     assert sensor.native_value is None
     assert sensor.extra_state_attributes is None
@@ -93,11 +93,11 @@ def test_sensor_keeps_empty_hourly_breakdown() -> None:
                 "daily": {},
             }
         ),
-        "571313174200318497",
+        "999999999999999999",
     )
 
     assert sensor.extra_state_attributes == {
-        "metering_point": "571313174200318497",
+        "metering_point": "999999999999999999",
         "latest_hour_api_start_utc": None,
         "latest_hour_api_end_utc": None,
         "latest_hour_start": None,
@@ -126,7 +126,7 @@ def test_timestamp_sensor_exposes_latest_api_hour() -> None:
                 "daily": {},
             }
         ),
-        "571313174200318497",
+        "999999999999999999",
     )
 
     assert sensor.native_value == datetime(2024, 1, 1, 23, 0, tzinfo=UTC)
@@ -149,7 +149,7 @@ def test_timestamp_sensor_handles_missing_latest_hour() -> None:
                 "daily": {},
             }
         ),
-        "571313174200318497",
+        "999999999999999999",
     )
 
     assert sensor.native_value is None

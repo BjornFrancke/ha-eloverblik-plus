@@ -54,13 +54,13 @@ async def test_setup_entry(
     mock_setup_frontend.assert_awaited_once_with(hass)
     assert (
         hass.states.get(
-            "sensor.eloverblik_plus_571313174200000000_latest_hourly_consumption"
+            "sensor.eloverblik_plus_999999999999999999_latest_hourly_consumption"
         )
         is not None
     )
     assert (
         hass.states.get(
-            "sensor.eloverblik_plus_571313174200000000_latest_hourly_interval_start"
+            "sensor.eloverblik_plus_999999999999999999_latest_hourly_interval_start"
         )
         is not None
     )

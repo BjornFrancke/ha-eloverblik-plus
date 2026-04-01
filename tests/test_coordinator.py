@@ -31,7 +31,7 @@ class FixedDateTime(datetime):
 async def test_coordinator_returns_latest_consumption(hass) -> None:
     """Test successful coordinator refresh."""
     client = AsyncMock()
-    client.metering_point = "571313174200318497"
+    client.metering_point = "999999999999999999"
     client.async_get_latest_consumption.return_value = {
         "latest_hour": {
             "api_start_utc": "2024-01-01T23:00:00Z",
@@ -77,7 +77,7 @@ async def test_coordinator_returns_latest_consumption(hass) -> None:
 async def test_coordinator_maps_auth_errors(hass) -> None:
     """Test auth errors trigger Home Assistant reauth handling."""
     client = AsyncMock()
-    client.metering_point = "571313174200318497"
+    client.metering_point = "999999999999999999"
     client.async_get_latest_consumption.side_effect = EloverblikAuthError("bad token")
     coordinator = EloverblikDataUpdateCoordinator(hass, client)
 
@@ -98,7 +98,7 @@ async def test_coordinator_maps_auth_errors(hass) -> None:
 async def test_coordinator_maps_update_failures(hass) -> None:
     """Test non-auth API errors surface as update failures."""
     client = AsyncMock()
-    client.metering_point = "571313174200318497"
+    client.metering_point = "999999999999999999"
     client.async_get_latest_consumption.side_effect = EloverblikConnectionError(
         "network down"
     )
@@ -121,7 +121,7 @@ async def test_coordinator_maps_update_failures(hass) -> None:
 async def test_coordinator_imports_new_hourly_statistics(hass) -> None:
     """Test hourly readings are imported into Home Assistant statistics."""
     client = AsyncMock()
-    client.metering_point = "571313174200318497"
+    client.metering_point = "999999999999999999"
     client.async_get_latest_consumption.return_value = {
         "latest_hour": {
             "api_start_utc": "2024-01-02T00:00:00Z",
@@ -173,7 +173,7 @@ async def test_coordinator_imports_new_hourly_statistics(hass) -> None:
     _, metadata, statistics = mock_add_external_statistics.call_args.args
     assert (
         metadata["statistic_id"]
-        == "eloverblik_plus:571313174200318497_hourly_consumption"
+        == "eloverblik_plus:999999999999999999_hourly_consumption"
     )
     assert [stat["start"] for stat in statistics] == [
         datetime(2024, 1, 1, 23, 0, tzinfo=UTC),
@@ -186,7 +186,7 @@ async def test_coordinator_imports_new_hourly_statistics(hass) -> None:
 async def test_coordinator_skips_existing_hourly_statistics(hass) -> None:
     """Test already imported hourly readings are not duplicated."""
     client = AsyncMock()
-    client.metering_point = "571313174200318497"
+    client.metering_point = "999999999999999999"
     client.async_get_latest_consumption.return_value = {
         "latest_hour": {
             "api_start_utc": "2024-01-02T01:00:00Z",
@@ -225,7 +225,7 @@ async def test_coordinator_skips_existing_hourly_statistics(hass) -> None:
     recorder = Mock()
     recorder.async_add_executor_job = AsyncMock(
         return_value={
-            "eloverblik_plus:571313174200318497_hourly_consumption": [
+            "eloverblik_plus:999999999999999999_hourly_consumption": [
                 {"start": 1704153600.0, "sum": 0.8}
             ]
         }
@@ -259,7 +259,7 @@ async def test_coordinator_skips_existing_hourly_statistics(hass) -> None:
 async def test_coordinator_uses_recent_window_for_routine_updates(hass) -> None:
     """Test routine polling uses a smaller rolling fetch window."""
     client = AsyncMock()
-    client.metering_point = "571313174200318497"
+    client.metering_point = "999999999999999999"
     client.async_get_latest_consumption.return_value = {
         "latest_hour": None,
         "latest_hour_kwh": None,
@@ -270,7 +270,7 @@ async def test_coordinator_uses_recent_window_for_routine_updates(hass) -> None:
     recorder = Mock()
     recorder.async_add_executor_job = AsyncMock(
         return_value={
-            "eloverblik_plus:571313174200318497_hourly_consumption": [
+            "eloverblik_plus:999999999999999999_hourly_consumption": [
                 {
                     "start": datetime(
                         2026, 3, 29, 0, 0, tzinfo=LOCAL_TIME_ZONE
@@ -303,7 +303,7 @@ async def test_coordinator_uses_recent_window_for_routine_updates(hass) -> None:
 async def test_coordinator_extends_window_to_catch_up_after_downtime(hass) -> None:
     """Test polling expands the fetch window when imported statistics are stale."""
     client = AsyncMock()
-    client.metering_point = "571313174200318497"
+    client.metering_point = "999999999999999999"
     client.async_get_latest_consumption.return_value = {
         "latest_hour": None,
         "latest_hour_kwh": None,
@@ -314,7 +314,7 @@ async def test_coordinator_extends_window_to_catch_up_after_downtime(hass) -> No
     recorder = Mock()
     recorder.async_add_executor_job = AsyncMock(
         return_value={
-            "eloverblik_plus:571313174200318497_hourly_consumption": [
+            "eloverblik_plus:999999999999999999_hourly_consumption": [
                 {
                     "start": datetime(
                         2026, 3, 20, 0, 0, tzinfo=LOCAL_TIME_ZONE

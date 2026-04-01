@@ -30,15 +30,15 @@ async def test_diagnostics_redacts_refresh_token(
         title="Eloverblik Test",
         data={
             CONF_REFRESH_TOKEN: "secret_refresh_token",
-            CONF_METERING_POINT: "571313174200000000",
+            CONF_METERING_POINT: "999999999999999999",
         },
-        unique_id="571313174200000000",
+        unique_id="999999999999999999",
     )
     coordinator = Mock()
     coordinator.last_update_success = True
     coordinator.data = {"latest_hour_kwh": 0.6}
     client = SimpleNamespace(
-        metering_point="571313174200000000",
+        metering_point="999999999999999999",
         _local_time_zone="Europe/Copenhagen",
         _access_token="cached_access_token",
         _access_token_expires_at=datetime(2026, 4, 1, 12, 0, tzinfo=UTC),
@@ -48,9 +48,9 @@ async def test_diagnostics_redacts_refresh_token(
     result = await async_get_config_entry_diagnostics(hass, entry)
 
     assert result["entry"]["data"][CONF_REFRESH_TOKEN] != "secret_refresh_token"
-    assert result["entry"]["data"][CONF_METERING_POINT] == "571313174200000000"
+    assert result["entry"]["data"][CONF_METERING_POINT] == "999999999999999999"
     assert result["client"] == {
-        "metering_point": "571313174200000000",
+        "metering_point": "999999999999999999",
         "local_time_zone": "Europe/Copenhagen",
         "has_cached_access_token": True,
         "access_token_expires_at": "2026-04-01T12:00:00+00:00",

@@ -98,7 +98,7 @@ Then add the card to a dashboard:
 
 ```yaml
 type: custom:eloverblik-hourly-card
-entity: sensor.eloverblik_plus_571313174200000000_latest_hourly_consumption
+entity: sensor.eloverblik_plus_999999999999999999_latest_hourly_consumption
 title: Eloverblik Hourly API Data
 hours_to_show: 24
 ```

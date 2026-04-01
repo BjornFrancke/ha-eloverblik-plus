@@ -12,7 +12,7 @@ from custom_components.eloverblik_plus.const import (
 )
 
 MOCK_REFRESH_TOKEN = "test_refresh_token"
-MOCK_METERING_POINT = "571313174200000000"
+MOCK_METERING_POINT = "999999999999999999"
 MOCK_ACCESS_TOKEN = "test_access_token"
 
 MOCK_TIME_SERIES_RESPONSE = {

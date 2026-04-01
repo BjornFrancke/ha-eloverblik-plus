@@ -21,17 +21,17 @@ from .conftest import MOCK_ACCESS_TOKEN, MOCK_METERING_POINT, MOCK_REFRESH_TOKEN
 SINGLE_METERING_POINT = [
     {
         CONF_METERING_POINT: MOCK_METERING_POINT,
-        "label": f"{MOCK_METERING_POINT} - Testvej 1, 4400 Kalundborg",
+        "label": f"{MOCK_METERING_POINT} - Demo Street 1, 9999 Testville",
     }
 ]
 MULTIPLE_METERING_POINTS = [
     {
         CONF_METERING_POINT: MOCK_METERING_POINT,
-        "label": f"{MOCK_METERING_POINT} - Testvej 1, 4400 Kalundborg",
+        "label": f"{MOCK_METERING_POINT} - Demo Street 1, 9999 Testville",
     },
     {
-        CONF_METERING_POINT: "571313174200000001",
-        "label": "571313174200000001 - Eksempelvej 2, 2100 Koebenhavn O",
+        CONF_METERING_POINT: "999999999999999998",
+        "label": "999999999999999998 - Sample Avenue 2, 8888 Exampletown",
     },
 ]
 

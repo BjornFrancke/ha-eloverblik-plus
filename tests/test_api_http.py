@@ -58,7 +58,7 @@ class MockResponse:
 def api_client() -> tuple[EloverblikApiClient, MagicMock]:
     """Create an API client with a mocked aiohttp session."""
     session = MagicMock()
-    client = EloverblikApiClient(session, "refresh_token", "571313174200318497")
+    client = EloverblikApiClient(session, "refresh_token", "999999999999999999")
     return client, session
 
 
@@ -134,7 +134,7 @@ async def test_async_get_time_series_success(
             "Authorization": "Bearer access_token",
             "Content-Type": "application/json",
         },
-        json={"meteringPoints": {"meteringPoint": ["571313174200318497"]}},
+        json={"meteringPoints": {"meteringPoint": ["999999999999999999"]}},
     )
 
 
@@ -148,11 +148,11 @@ async def test_async_get_metering_points_success(
         json_data={
             "result": [
                 {
-                    "meteringPointId": "571313174200318497",
-                    "streetName": "Eksempelvej",
+                    "meteringPointId": "999999999999999999",
+                    "streetName": "Demo Street",
                     "buildingNumber": "2",
-                    "postcode": "2100",
-                    "cityName": "Koebenhavn O",
+                    "postcode": "9999",
+                    "cityName": "Testville",
                 }
             ]
         },
@@ -162,8 +162,8 @@ async def test_async_get_metering_points_success(
 
     assert result == [
         {
-            "metering_point": "571313174200318497",
-            "label": "571313174200318497 - Eksempelvej 2, 2100 Koebenhavn O",
+            "metering_point": "999999999999999999",
+            "label": "999999999999999999 - Demo Street 2, 9999 Testville",
         }
     ]
     session.get.assert_called_once_with(
