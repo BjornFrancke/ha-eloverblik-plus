@@ -5,8 +5,6 @@ from __future__ import annotations
 from datetime import UTC, datetime
 from unittest.mock import Mock
 
-from homeassistant.components.sensor import SensorStateClass
-
 from custom_components.eloverblik_plus.sensor import (
     EloverblikEnergySensor,
     EloverblikLatestHourStartSensor,
@@ -52,7 +50,7 @@ def test_sensor_exposes_consumption_state_and_attributes() -> None:
     )
 
     assert sensor.native_value == 0.5
-    assert sensor.state_class is SensorStateClass.MEASUREMENT
+    assert sensor.state_class is None
     assert sensor.extra_state_attributes == {
         "metering_point": "999999999999999999",
         "latest_hour_api_start_utc": "2024-01-01T23:00:00Z",
