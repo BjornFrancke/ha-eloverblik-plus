@@ -146,7 +146,8 @@ python release.py 0.1.2
 What it does:
 
 1. Verifies the git working tree is clean.
-2. Updates the version in `custom_components/eloverblik_plus/manifest.json`.
+2. Updates the version and `pyeloverblik` tag reference in
+   `custom_components/eloverblik_plus/manifest.json`.
 3. Updates the version in `pyproject.toml`.
 4. Runs `ruff check`, `ruff format --check`, and `pytest`.
 5. Creates a release commit and annotated tag like `v0.1.2`.
@@ -166,8 +167,8 @@ python release.py 0.1.2 --push --github-release
 
 Notes:
 
-- Keep `manifest.json`, `pyproject.toml`, and the git tag aligned, for example
-  `0.1.2` and `v0.1.2`
+- Keep `manifest.json`, `pyproject.toml`, and the `pyeloverblik` dependency tag
+  aligned with the release version, for example `0.1.2` and `v0.1.2`
 - Do not move or reuse old tags after publishing; create a new version instead
 - Use patch releases like `0.1.2` for fixes and minor releases like `0.2.0`
   for new features
