@@ -8,12 +8,12 @@ from unittest.mock import MagicMock
 import aiohttp
 import pytest
 
-from custom_components.eloverblik_custom.api import (
+from custom_components.eloverblik_plus.api import (
     EloverblikApiClient,
     EloverblikAuthError,
     EloverblikConnectionError,
 )
-from custom_components.eloverblik_custom.const import (
+from custom_components.eloverblik_plus.const import (
     API_METER_DATA_URL,
     API_METERING_POINTS_URL,
     API_TOKEN_URL,
@@ -222,7 +222,7 @@ async def test_async_get_time_series_retries_transient_http_errors(
         sleep_calls.append(delay)
 
     monkeypatch.setattr(
-        "custom_components.eloverblik_custom.api.asyncio.sleep",
+        "custom_components.eloverblik_plus.api.asyncio.sleep",
         fake_sleep,
     )
 

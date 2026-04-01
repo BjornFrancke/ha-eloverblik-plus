@@ -9,12 +9,12 @@ from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import UpdateFailed
 import pytest
 
-from custom_components.eloverblik_custom.api import (
+from custom_components.eloverblik_plus.api import (
     LOCAL_TIME_ZONE,
     EloverblikAuthError,
     EloverblikConnectionError,
 )
-from custom_components.eloverblik_custom.coordinator import (
+from custom_components.eloverblik_plus.coordinator import (
     EloverblikDataUpdateCoordinator,
 )
 
@@ -57,11 +57,11 @@ async def test_coordinator_returns_latest_consumption(hass) -> None:
 
     with (
         patch(
-            "custom_components.eloverblik_custom.coordinator.datetime",
+            "custom_components.eloverblik_plus.coordinator.datetime",
             FixedDateTime,
         ),
         patch(
-            "custom_components.eloverblik_custom.coordinator.get_instance",
+            "custom_components.eloverblik_plus.coordinator.get_instance",
             side_effect=KeyError,
         ),
     ):
@@ -83,11 +83,11 @@ async def test_coordinator_maps_auth_errors(hass) -> None:
 
     with (
         patch(
-            "custom_components.eloverblik_custom.coordinator.datetime",
+            "custom_components.eloverblik_plus.coordinator.datetime",
             FixedDateTime,
         ),
         patch(
-            "custom_components.eloverblik_custom.coordinator.get_instance",
+            "custom_components.eloverblik_plus.coordinator.get_instance",
             side_effect=KeyError,
         ),
         pytest.raises(ConfigEntryAuthFailed, match="Authentication failed: bad token"),
@@ -106,11 +106,11 @@ async def test_coordinator_maps_update_failures(hass) -> None:
 
     with (
         patch(
-            "custom_components.eloverblik_custom.coordinator.datetime",
+            "custom_components.eloverblik_plus.coordinator.datetime",
             FixedDateTime,
         ),
         patch(
-            "custom_components.eloverblik_custom.coordinator.get_instance",
+            "custom_components.eloverblik_plus.coordinator.get_instance",
             side_effect=KeyError,
         ),
         pytest.raises(UpdateFailed, match="Error fetching data: network down"),
@@ -156,15 +156,15 @@ async def test_coordinator_imports_new_hourly_statistics(hass) -> None:
 
     with (
         patch(
-            "custom_components.eloverblik_custom.coordinator.datetime",
+            "custom_components.eloverblik_plus.coordinator.datetime",
             FixedDateTime,
         ),
         patch(
-            "custom_components.eloverblik_custom.coordinator.get_instance",
+            "custom_components.eloverblik_plus.coordinator.get_instance",
             return_value=recorder,
         ),
         patch(
-            "custom_components.eloverblik_custom.coordinator.async_add_external_statistics"
+            "custom_components.eloverblik_plus.coordinator.async_add_external_statistics"
         ) as mock_add_external_statistics,
     ):
         await coordinator._async_update_data()
@@ -173,7 +173,7 @@ async def test_coordinator_imports_new_hourly_statistics(hass) -> None:
     _, metadata, statistics = mock_add_external_statistics.call_args.args
     assert (
         metadata["statistic_id"]
-        == "eloverblik_custom:571313174200318497_hourly_consumption"
+        == "eloverblik_plus:571313174200318497_hourly_consumption"
     )
     assert [stat["start"] for stat in statistics] == [
         datetime(2024, 1, 1, 23, 0, tzinfo=UTC),
@@ -225,7 +225,7 @@ async def test_coordinator_skips_existing_hourly_statistics(hass) -> None:
     recorder = Mock()
     recorder.async_add_executor_job = AsyncMock(
         return_value={
-            "eloverblik_custom:571313174200318497_hourly_consumption": [
+            "eloverblik_plus:571313174200318497_hourly_consumption": [
                 {"start": 1704153600.0, "sum": 0.8}
             ]
         }
@@ -234,15 +234,15 @@ async def test_coordinator_skips_existing_hourly_statistics(hass) -> None:
 
     with (
         patch(
-            "custom_components.eloverblik_custom.coordinator.datetime",
+            "custom_components.eloverblik_plus.coordinator.datetime",
             FixedDateTime,
         ),
         patch(
-            "custom_components.eloverblik_custom.coordinator.get_instance",
+            "custom_components.eloverblik_plus.coordinator.get_instance",
             return_value=recorder,
         ),
         patch(
-            "custom_components.eloverblik_custom.coordinator.async_add_external_statistics"
+            "custom_components.eloverblik_plus.coordinator.async_add_external_statistics"
         ) as mock_add_external_statistics,
     ):
         await coordinator._async_update_data()
@@ -270,7 +270,7 @@ async def test_coordinator_uses_recent_window_for_routine_updates(hass) -> None:
     recorder = Mock()
     recorder.async_add_executor_job = AsyncMock(
         return_value={
-            "eloverblik_custom:571313174200318497_hourly_consumption": [
+            "eloverblik_plus:571313174200318497_hourly_consumption": [
                 {
                     "start": datetime(
                         2026, 3, 29, 0, 0, tzinfo=LOCAL_TIME_ZONE
@@ -284,11 +284,11 @@ async def test_coordinator_uses_recent_window_for_routine_updates(hass) -> None:
 
     with (
         patch(
-            "custom_components.eloverblik_custom.coordinator.datetime",
+            "custom_components.eloverblik_plus.coordinator.datetime",
             FixedDateTime,
         ),
         patch(
-            "custom_components.eloverblik_custom.coordinator.get_instance",
+            "custom_components.eloverblik_plus.coordinator.get_instance",
             return_value=recorder,
         ),
     ):
@@ -314,7 +314,7 @@ async def test_coordinator_extends_window_to_catch_up_after_downtime(hass) -> No
     recorder = Mock()
     recorder.async_add_executor_job = AsyncMock(
         return_value={
-            "eloverblik_custom:571313174200318497_hourly_consumption": [
+            "eloverblik_plus:571313174200318497_hourly_consumption": [
                 {
                     "start": datetime(
                         2026, 3, 20, 0, 0, tzinfo=LOCAL_TIME_ZONE
@@ -328,11 +328,11 @@ async def test_coordinator_extends_window_to_catch_up_after_downtime(hass) -> No
 
     with (
         patch(
-            "custom_components.eloverblik_custom.coordinator.datetime",
+            "custom_components.eloverblik_plus.coordinator.datetime",
             FixedDateTime,
         ),
         patch(
-            "custom_components.eloverblik_custom.coordinator.get_instance",
+            "custom_components.eloverblik_plus.coordinator.get_instance",
             return_value=recorder,
         ),
     ):

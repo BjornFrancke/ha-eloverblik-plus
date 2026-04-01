@@ -1,4 +1,4 @@
-# Eloverblik Custom
+# Eloverblik Plus
 
 Home Assistant custom integration for fetching Danish electricity consumption data
 from Eloverblik / Energinet.
@@ -21,12 +21,12 @@ from Eloverblik / Energinet.
 1. Open HACS in Home Assistant.
 2. Add this repository as a custom repository.
 3. Select category `Integration`.
-4. Install `Eloverblik Custom`.
+4. Install `Eloverblik Plus`.
 5. Restart Home Assistant.
 
 ### Manual
 
-1. Copy `custom_components/eloverblik_custom` into your Home Assistant
+1. Copy `custom_components/eloverblik_plus` into your Home Assistant
    `custom_components` directory.
 2. Restart Home Assistant.
 
@@ -36,7 +36,7 @@ Add the integration from the Home Assistant UI:
 
 1. Go to `Settings -> Devices & services`.
 2. Choose `Add integration`.
-3. Search for `Eloverblik Custom`.
+3. Search for `Eloverblik Plus`.
 4. Enter your Eloverblik refresh token.
 5. If your account has access to multiple metering points, choose the one you
    want to import.
@@ -90,7 +90,7 @@ automatically. If Home Assistant does not pick it up automatically, add the
 resource manually:
 
 ```yaml
-url: /eloverblik_custom/eloverblik-hourly-card.js
+url: /eloverblik_plus/eloverblik-hourly-card.js
 type: module
 ```
 
@@ -98,7 +98,7 @@ Then add the card to a dashboard:
 
 ```yaml
 type: custom:eloverblik-hourly-card
-entity: sensor.eloverblik_571313174200000000_latest_hourly_consumption
+entity: sensor.eloverblik_plus_571313174200000000_latest_hourly_consumption
 title: Eloverblik Hourly API Data
 hours_to_show: 24
 ```
@@ -137,7 +137,7 @@ install.
 
 Recommended workflow:
 
-1. Update `custom_components/eloverblik_custom/manifest.json` and bump the
+1. Update `custom_components/eloverblik_plus/manifest.json` and bump the
    `"version"` value, for example from `0.1.0` to `0.1.1`.
 2. Commit the change.
 3. Create an annotated git tag that matches the release version, usually with a
@@ -148,7 +148,7 @@ Recommended workflow:
 Example:
 
 ```bash
-git add custom_components/eloverblik_custom/manifest.json README.md hacs.json
+git add custom_components/eloverblik_plus/manifest.json README.md hacs.json
 git commit -m "Prepare v0.1.1 release"
 git tag -a v0.1.1 -m "Release v0.1.1"
 git push origin main

@@ -1,5 +1,5 @@
 {
-  "name": "Eloverblik Custom HA Integration",
+  "name": "Eloverblik Plus HA Integration",
   "build": {
     "dockerfile": "Dockerfile"
   },

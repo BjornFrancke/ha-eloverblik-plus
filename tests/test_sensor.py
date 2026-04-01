@@ -7,7 +7,7 @@ from unittest.mock import Mock
 
 from homeassistant.components.sensor import SensorStateClass
 
-from custom_components.eloverblik_custom.sensor import (
+from custom_components.eloverblik_plus.sensor import (
     EloverblikEnergySensor,
     EloverblikLatestHourStartSensor,
 )

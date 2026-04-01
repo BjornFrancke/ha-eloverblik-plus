@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Home Assistant custom integration for **Eloverblik** (Danish electricity data from Energinet). Domain: `eloverblik_custom`. Fetches hourly consumption data from the Eloverblik API using a refresh token and metering point ID.
+Home Assistant custom integration for **Eloverblik** (Danish electricity data from Energinet). Domain: `eloverblik_plus`. Fetches hourly consumption data from the Eloverblik API using a refresh token and metering point ID.
 
 ## Commands
 

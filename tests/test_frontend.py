@@ -15,7 +15,7 @@ from homeassistant.components.lovelace.const import (
 )
 from homeassistant.const import CONF_URL
 
-from custom_components.eloverblik_custom.frontend import (
+from custom_components.eloverblik_plus.frontend import (
     CARD_RESOURCE_URL,
     FRONTEND_URL_BASE,
     async_setup_frontend,
@@ -45,7 +45,7 @@ async def test_async_setup_frontend_registers_static_path_and_resource() -> None
     [static_config] = test_hass.http.async_register_static_paths.await_args.args[0]
     assert isinstance(static_config, StaticPathConfig)
     assert static_config.url_path == FRONTEND_URL_BASE
-    assert static_config.path.endswith("/custom_components/eloverblik_custom/frontend")
+    assert static_config.path.endswith("/custom_components/eloverblik_plus/frontend")
     assert static_config.cache_headers is False
     resources.async_get_info.assert_awaited_once()
     resources.async_create_item.assert_awaited_once_with(
@@ -86,7 +86,7 @@ def test_readme_example_matches_shipped_custom_card_name() -> None:
     frontend_js = (
         repo_root
         / "custom_components"
-        / "eloverblik_custom"
+        / "eloverblik_plus"
         / "frontend"
         / "eloverblik-hourly-card.js"
     ).read_text()

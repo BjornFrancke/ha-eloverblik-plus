@@ -1,4 +1,4 @@
-"""The Eloverblik Custom integration."""
+"""The Eloverblik Plus integration."""
 
 from __future__ import annotations
 
@@ -29,7 +29,7 @@ class EloverblikData:
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: EloverblikConfigEntry) -> bool:
-    """Set up Eloverblik Custom from a config entry."""
+    """Set up Eloverblik Plus from a config entry."""
     await async_setup_frontend(hass)
 
     session = async_get_clientsession(hass)

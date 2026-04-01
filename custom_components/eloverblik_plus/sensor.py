@@ -1,4 +1,4 @@
-"""Sensor platform for Eloverblik Custom."""
+"""Sensor platform for Eloverblik Plus."""
 
 from __future__ import annotations
 
@@ -56,7 +56,7 @@ class EloverblikBaseSensor(
         self._metering_point = metering_point
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, metering_point)},
-            name=f"Eloverblik {metering_point}",
+            name=f"Eloverblik Plus {metering_point}",
             entry_type=DeviceEntryType.SERVICE,
             manufacturer="Energinet",
         )

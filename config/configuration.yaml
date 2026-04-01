@@ -3,4 +3,4 @@ default_config:
 logger:
   default: info
   logs:
-    custom_components.eloverblik_custom: debug
+    custom_components.eloverblik_plus: debug

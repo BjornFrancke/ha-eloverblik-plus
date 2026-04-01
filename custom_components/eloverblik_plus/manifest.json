@@ -1,6 +1,6 @@
 {
-  "domain": "eloverblik_custom",
-  "name": "Eloverblik Custom",
+  "domain": "eloverblik_plus",
+  "name": "Eloverblik Plus",
   "codeowners": [],
   "config_flow": true,
   "documentation": "https://github.com/BjornFrancke/ha-eloverblik",

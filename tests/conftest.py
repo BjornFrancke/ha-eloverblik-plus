@@ -1,4 +1,4 @@
-"""Fixtures for Eloverblik Custom tests."""
+"""Fixtures for Eloverblik Plus tests."""
 
 from __future__ import annotations
 
@@ -7,7 +7,7 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 
-from custom_components.eloverblik_custom.const import (
+from custom_components.eloverblik_plus.const import (
     CONF_METERING_POINT,
     CONF_REFRESH_TOKEN,
 )
@@ -84,7 +84,7 @@ def mock_config_entry_data() -> dict:
 def mock_eloverblik_api() -> Generator[AsyncMock]:
     """Mock the Eloverblik API client."""
     with patch(
-        "custom_components.eloverblik_custom.api.EloverblikApiClient",
+        "custom_components.eloverblik_plus.api.EloverblikApiClient",
         autospec=True,
     ) as mock_client_class:
         mock_client = mock_client_class.return_value

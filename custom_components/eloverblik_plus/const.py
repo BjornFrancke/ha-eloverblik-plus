@@ -1,10 +1,10 @@
-"""Constants for the Eloverblik Custom integration."""
+"""Constants for the Eloverblik Plus integration."""
 
 from logging import getLogger
 
 LOGGER = getLogger(__package__)
 
-DOMAIN = "eloverblik_custom"
+DOMAIN = "eloverblik_plus"
 
 CONF_REFRESH_TOKEN = "refresh_token"
 CONF_METERING_POINT = "metering_point"

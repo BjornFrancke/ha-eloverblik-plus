@@ -1,4 +1,4 @@
-"""Config flow for Eloverblik Custom integration."""
+"""Config flow for Eloverblik Plus integration."""
 
 from __future__ import annotations
 
@@ -109,7 +109,7 @@ def _build_metering_point_selector(
 
 
 class EloverblikConfigFlow(ConfigFlow, domain=DOMAIN):
-    """Handle a config flow for Eloverblik Custom."""
+    """Handle a config flow for Eloverblik Plus."""
 
     VERSION = 1
     _reauth_entry: ConfigEntry | None = None
@@ -124,7 +124,7 @@ class EloverblikConfigFlow(ConfigFlow, domain=DOMAIN):
         self._abort_if_unique_id_configured()
 
         return self.async_create_entry(
-            title=f"Eloverblik ({metering_point})",
+            title=f"Eloverblik Plus ({metering_point})",
             data={
                 CONF_REFRESH_TOKEN: refresh_token,
                 CONF_METERING_POINT: metering_point,

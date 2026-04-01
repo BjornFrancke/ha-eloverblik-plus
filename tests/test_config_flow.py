@@ -1,4 +1,4 @@
-"""Tests for the Eloverblik Custom config flow."""
+"""Tests for the Eloverblik Plus config flow."""
 
 from __future__ import annotations
 
@@ -9,11 +9,11 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
-from custom_components.eloverblik_custom.api import (
+from custom_components.eloverblik_plus.api import (
     EloverblikAuthError,
     EloverblikConnectionError,
 )
-from custom_components.eloverblik_custom.const import (
+from custom_components.eloverblik_plus.const import (
     CONF_METERING_POINT,
     CONF_REFRESH_TOKEN,
     DOMAIN,
@@ -51,7 +51,7 @@ async def test_user_flow_success(
     assert result["step_id"] == "user"
 
     with patch(
-        "custom_components.eloverblik_custom.config_flow.EloverblikApiClient",
+        "custom_components.eloverblik_plus.config_flow.EloverblikApiClient",
     ) as mock_client_class:
         mock_client = mock_client_class.return_value
         mock_client.async_get_access_token = AsyncMock(return_value=MOCK_ACCESS_TOKEN)
@@ -65,7 +65,7 @@ async def test_user_flow_success(
         )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == f"Eloverblik ({MOCK_METERING_POINT})"
+    assert result["title"] == f"Eloverblik Plus ({MOCK_METERING_POINT})"
     assert result["data"] == {
         CONF_REFRESH_TOKEN: MOCK_REFRESH_TOKEN,
         CONF_METERING_POINT: MOCK_METERING_POINT,
@@ -82,7 +82,7 @@ async def test_user_flow_invalid_auth(
     )
 
     with patch(
-        "custom_components.eloverblik_custom.config_flow.EloverblikApiClient",
+        "custom_components.eloverblik_plus.config_flow.EloverblikApiClient",
     ) as mock_client_class:
         mock_client = mock_client_class.return_value
         mock_client.async_get_access_token = AsyncMock(
@@ -108,7 +108,7 @@ async def test_user_flow_cannot_connect(
     )
 
     with patch(
-        "custom_components.eloverblik_custom.config_flow.EloverblikApiClient",
+        "custom_components.eloverblik_plus.config_flow.EloverblikApiClient",
     ) as mock_client_class:
         mock_client = mock_client_class.return_value
         mock_client.async_get_access_token = AsyncMock(
@@ -134,7 +134,7 @@ async def test_user_flow_prompts_for_metering_point_selection(
     )
 
     with patch(
-        "custom_components.eloverblik_custom.config_flow.EloverblikApiClient",
+        "custom_components.eloverblik_plus.config_flow.EloverblikApiClient",
     ) as mock_client_class:
         mock_client = mock_client_class.return_value
         mock_client.async_get_access_token = AsyncMock(return_value=MOCK_ACCESS_TOKEN)
@@ -159,7 +159,7 @@ async def test_user_flow_prompts_for_metering_point_selection(
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == (
-        f"Eloverblik ({MULTIPLE_METERING_POINTS[1][CONF_METERING_POINT]})"
+        f"Eloverblik Plus ({MULTIPLE_METERING_POINTS[1][CONF_METERING_POINT]})"
     )
     assert result["data"] == {
         CONF_REFRESH_TOKEN: MOCK_REFRESH_TOKEN,
@@ -177,7 +177,7 @@ async def test_user_flow_no_metering_points(
     )
 
     with patch(
-        "custom_components.eloverblik_custom.config_flow.EloverblikApiClient",
+        "custom_components.eloverblik_plus.config_flow.EloverblikApiClient",
     ) as mock_client_class:
         mock_client = mock_client_class.return_value
         mock_client.async_get_access_token = AsyncMock(return_value=MOCK_ACCESS_TOKEN)
@@ -204,7 +204,7 @@ async def test_duplicate_entry(
     )
 
     with patch(
-        "custom_components.eloverblik_custom.config_flow.EloverblikApiClient",
+        "custom_components.eloverblik_plus.config_flow.EloverblikApiClient",
     ) as mock_client_class:
         mock_client = mock_client_class.return_value
         mock_client.async_get_access_token = AsyncMock(return_value=MOCK_ACCESS_TOKEN)
@@ -225,7 +225,7 @@ async def test_duplicate_entry(
     )
 
     with patch(
-        "custom_components.eloverblik_custom.config_flow.EloverblikApiClient",
+        "custom_components.eloverblik_plus.config_flow.EloverblikApiClient",
     ) as mock_client_class:
         mock_client = mock_client_class.return_value
         mock_client.async_get_access_token = AsyncMock(return_value=MOCK_ACCESS_TOKEN)
@@ -249,7 +249,7 @@ async def test_reauth_flow_success(
     """Test successful reauthentication."""
     entry = MockConfigEntry(
         domain=DOMAIN,
-        title=f"Eloverblik ({MOCK_METERING_POINT})",
+        title=f"Eloverblik Plus ({MOCK_METERING_POINT})",
         data={
             CONF_REFRESH_TOKEN: MOCK_REFRESH_TOKEN,
             CONF_METERING_POINT: MOCK_METERING_POINT,
@@ -268,7 +268,7 @@ async def test_reauth_flow_success(
 
     with (
         patch(
-            "custom_components.eloverblik_custom.config_flow.EloverblikApiClient",
+            "custom_components.eloverblik_plus.config_flow.EloverblikApiClient",
         ) as mock_client_class,
         patch.object(hass.config_entries, "async_reload", AsyncMock(return_value=True)),
     ):
@@ -293,7 +293,7 @@ async def test_reauth_flow_invalid_auth(
     """Test reauthentication with invalid credentials."""
     entry = MockConfigEntry(
         domain=DOMAIN,
-        title=f"Eloverblik ({MOCK_METERING_POINT})",
+        title=f"Eloverblik Plus ({MOCK_METERING_POINT})",
         data={
             CONF_REFRESH_TOKEN: MOCK_REFRESH_TOKEN,
             CONF_METERING_POINT: MOCK_METERING_POINT,
@@ -309,7 +309,7 @@ async def test_reauth_flow_invalid_auth(
     )
 
     with patch(
-        "custom_components.eloverblik_custom.config_flow.EloverblikApiClient",
+        "custom_components.eloverblik_plus.config_flow.EloverblikApiClient",
     ) as mock_client_class:
         mock_client = mock_client_class.return_value
         mock_client.async_get_access_token = AsyncMock(

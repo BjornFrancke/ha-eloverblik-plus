@@ -6,7 +6,7 @@ from zoneinfo import ZoneInfo
 
 import pytest
 
-from custom_components.eloverblik_custom.api import EloverblikApiClient, EloverblikError
+from custom_components.eloverblik_plus.api import EloverblikApiClient, EloverblikError
 
 from .conftest import MOCK_TIME_SERIES_RESPONSE
 

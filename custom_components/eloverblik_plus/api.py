@@ -85,9 +85,7 @@ class EloverblikApiClient:
             ).strip(),
         ]
         address = ", ".join(part for part in address_parts if part)
-        return (
-            f"{metering_point_id} - {address}" if address else str(metering_point_id)
-        )
+        return f"{metering_point_id} - {address}" if address else str(metering_point_id)
 
     def _invalidate_access_token(self) -> None:
         """Clear any cached access token."""

@@ -1,4 +1,4 @@
-"""Tests for the Eloverblik Custom integration setup."""
+"""Tests for the Eloverblik Plus integration setup."""
 
 from __future__ import annotations
 
@@ -9,7 +9,7 @@ from homeassistant.core import HomeAssistant
 import pytest
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
-from custom_components.eloverblik_custom.const import DOMAIN
+from custom_components.eloverblik_plus.const import DOMAIN
 
 from .conftest import MOCK_METERING_POINT, MOCK_REFRESH_TOKEN
 
@@ -39,11 +39,11 @@ async def test_setup_entry(
     """Test successful setup of a config entry."""
     with (
         patch(
-            "custom_components.eloverblik_custom.EloverblikApiClient",
+            "custom_components.eloverblik_plus.EloverblikApiClient",
             return_value=mock_eloverblik_api,
         ),
         patch(
-            "custom_components.eloverblik_custom.async_setup_frontend",
+            "custom_components.eloverblik_plus.async_setup_frontend",
             new=AsyncMock(),
         ) as mock_setup_frontend,
     ):
@@ -54,13 +54,13 @@ async def test_setup_entry(
     mock_setup_frontend.assert_awaited_once_with(hass)
     assert (
         hass.states.get(
-            "sensor.eloverblik_571313174200000000_latest_hourly_consumption"
+            "sensor.eloverblik_plus_571313174200000000_latest_hourly_consumption"
         )
         is not None
     )
     assert (
         hass.states.get(
-            "sensor.eloverblik_571313174200000000_latest_hourly_interval_start"
+            "sensor.eloverblik_plus_571313174200000000_latest_hourly_interval_start"
         )
         is not None
     )
@@ -75,11 +75,11 @@ async def test_unload_entry(
     """Test unloading a config entry."""
     with (
         patch(
-            "custom_components.eloverblik_custom.EloverblikApiClient",
+            "custom_components.eloverblik_plus.EloverblikApiClient",
             return_value=mock_eloverblik_api,
         ),
         patch(
-            "custom_components.eloverblik_custom.async_setup_frontend",
+            "custom_components.eloverblik_plus.async_setup_frontend",
             new=AsyncMock(),
         ),
     ):
