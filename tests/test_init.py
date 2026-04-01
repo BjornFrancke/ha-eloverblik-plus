@@ -64,6 +64,18 @@ async def test_setup_entry(
         )
         is not None
     )
+    assert (
+        hass.states.get(
+            "sensor.eloverblik_plus_999999999999999999_today_consumption"
+        )
+        is not None
+    )
+    assert (
+        hass.states.get(
+            "sensor.eloverblik_plus_999999999999999999_yesterday_consumption"
+        )
+        is not None
+    )
 
 
 async def test_unload_entry(
@@ -91,3 +103,37 @@ async def test_unload_entry(
 
     assert result is True
     assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
+
+
+async def test_backfill_service_targets_loaded_entry(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_eloverblik_api: AsyncMock,
+    enable_custom_integrations: None,
+) -> None:
+    """Test the manual backfill service dispatches to the entry coordinator."""
+    with (
+        patch(
+            "custom_components.eloverblik_plus.EloverblikApiClient",
+            return_value=mock_eloverblik_api,
+        ),
+        patch(
+            "custom_components.eloverblik_plus.async_setup_frontend",
+            new=AsyncMock(),
+        ),
+    ):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    coordinator = mock_config_entry.runtime_data.coordinator
+    with patch.object(
+        coordinator, "async_backfill_history", AsyncMock()
+    ) as mock_backfill:
+        await hass.services.async_call(
+            DOMAIN,
+            "backfill_history",
+            {"days": 30},
+            blocking=True,
+        )
+
+    mock_backfill.assert_awaited_once_with(30)

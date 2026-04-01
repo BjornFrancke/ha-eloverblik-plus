@@ -13,6 +13,7 @@ from homeassistant.components.recorder.models import (
 )
 from homeassistant.components.recorder.statistics import (
     async_add_external_statistics,
+    clear_statistics,
     get_last_statistics,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -101,6 +102,51 @@ class EloverblikDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         end = now + timedelta(days=1)
         return start.strftime("%Y-%m-%d"), end.strftime("%Y-%m-%d")
 
+    def _get_backfill_window(self, days: int) -> tuple[str, str]:
+        """Return the date window for a manual history rebuild."""
+        now = datetime.now(LOCAL_TIME_ZONE)
+        start = max(
+            now - timedelta(days=days),
+            now - timedelta(days=MAX_TIME_SERIES_DAYS),
+        )
+        end = now + timedelta(days=1)
+        return start.strftime("%Y-%m-%d"), end.strftime("%Y-%m-%d")
+
+    def _build_statistics_metadata(self) -> StatisticMetaData:
+        """Build metadata for imported hourly consumption statistics."""
+        return StatisticMetaData(
+            mean_type=StatisticMeanType.NONE,
+            has_sum=True,
+            name=f"{self.client.metering_point} hourly consumption",
+            source=DOMAIN,
+            statistic_id=self._get_statistic_id(),
+            unit_class=EnergyConverter.UNIT_CLASS,
+            unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        )
+
+    def _build_hourly_statistics(
+        self,
+        data: dict[str, Any],
+        *,
+        running_sum: float = 0.0,
+        last_stat_start: datetime | None = None,
+    ) -> list[StatisticData]:
+        """Convert fetched hourly entries into Home Assistant statistics rows."""
+        statistics: list[StatisticData] = []
+
+        for entry in data.get("hourly", []):
+            start_timestamp = entry.get("api_start_utc", entry["start"])
+            start_dt = datetime.fromisoformat(start_timestamp.replace("Z", "+00:00"))
+            if last_stat_start is not None and start_dt <= last_stat_start:
+                continue
+
+            running_sum += entry["kwh"]
+            statistics.append(
+                StatisticData(start=start_dt, state=entry["kwh"], sum=running_sum)
+            )
+
+        return statistics
+
     async def _async_import_hourly_statistics(
         self,
         data: dict[str, Any],
@@ -132,31 +178,47 @@ class EloverblikDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 last_stat = last_stats[statistic_id][0]
                 running_sum = float(last_stat.get("sum", 0.0))
 
-        statistics: list[StatisticData] = []
-        for entry in hourly:
-            start_timestamp = entry.get("api_start_utc", entry["start"])
-            start_dt = datetime.fromisoformat(start_timestamp.replace("Z", "+00:00"))
-            if last_stat_start is not None and start_dt <= last_stat_start:
-                continue
-
-            running_sum += entry["kwh"]
-            statistics.append(
-                StatisticData(start=start_dt, state=entry["kwh"], sum=running_sum)
-            )
-
+        statistics = self._build_hourly_statistics(
+            data,
+            running_sum=running_sum,
+            last_stat_start=last_stat_start,
+        )
         if not statistics:
             return
 
-        metadata = StatisticMetaData(
-            mean_type=StatisticMeanType.NONE,
-            has_sum=True,
-            name=f"{self.client.metering_point} hourly consumption",
-            source=DOMAIN,
-            statistic_id=statistic_id,
-            unit_class=EnergyConverter.UNIT_CLASS,
-            unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        async_add_external_statistics(
+            self.hass, self._build_statistics_metadata(), statistics
         )
-        async_add_external_statistics(self.hass, metadata, statistics)
+
+    async def async_backfill_history(self, days: int) -> None:
+        """Rebuild imported hourly statistics for a larger history window."""
+        try:
+            recorder = get_instance(self.hass)
+        except KeyError:
+            recorder = None
+
+        try:
+            start_date, end_date = self._get_backfill_window(days)
+            data = await self.client.async_get_latest_consumption(
+                start_date=start_date,
+                end_date=end_date,
+            )
+
+            if recorder is not None:
+                await recorder.async_add_executor_job(
+                    clear_statistics, recorder, [self._get_statistic_id()]
+                )
+                statistics = self._build_hourly_statistics(data)
+                if statistics:
+                    async_add_external_statistics(
+                        self.hass, self._build_statistics_metadata(), statistics
+                    )
+
+            await self.async_refresh()
+        except EloverblikAuthError as err:
+            raise ConfigEntryAuthFailed(f"Authentication failed: {err}") from err
+        except EloverblikError as err:
+            raise UpdateFailed(f"Error fetching data: {err}") from err
 
     async def _async_update_data(self) -> dict[str, Any]:
         """Fetch data from the Eloverblik API."""

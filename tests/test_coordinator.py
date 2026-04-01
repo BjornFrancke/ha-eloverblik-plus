@@ -342,3 +342,81 @@ async def test_coordinator_extends_window_to_catch_up_after_downtime(hass) -> No
         start_date="2026-03-19",
         end_date="2026-04-01",
     )
+
+
+async def test_manual_backfill_rebuilds_statistics_for_requested_window(hass) -> None:
+    """Test manual backfill clears and rebuilds imported hourly statistics."""
+    client = AsyncMock()
+    client.metering_point = "999999999999999999"
+    client.async_get_latest_consumption.return_value = {
+        "latest_hour": {
+            "api_start_utc": "2024-01-02T00:00:00Z",
+            "api_end_utc": "2024-01-02T01:00:00Z",
+            "start": "2024-01-02T01:00:00+01:00",
+            "end": "2024-01-02T02:00:00+01:00",
+            "kwh": 0.3,
+        },
+        "latest_hour_kwh": 0.3,
+        "window_total_kwh": 0.8,
+        "hourly": [
+            {
+                "api_start_utc": "2024-01-01T23:00:00Z",
+                "api_end_utc": "2024-01-02T00:00:00Z",
+                "start": "2024-01-02T00:00:00+01:00",
+                "end": "2024-01-02T01:00:00+01:00",
+                "kwh": 0.5,
+            },
+            {
+                "api_start_utc": "2024-01-02T00:00:00Z",
+                "api_end_utc": "2024-01-02T01:00:00Z",
+                "start": "2024-01-02T01:00:00+01:00",
+                "end": "2024-01-02T02:00:00+01:00",
+                "kwh": 0.3,
+            },
+        ],
+        "daily": {"2024-01-02": 0.8},
+    }
+    recorder = Mock()
+    recorder.async_add_executor_job = AsyncMock()
+    coordinator = EloverblikDataUpdateCoordinator(hass, client)
+
+    with (
+        patch(
+            "custom_components.eloverblik_plus.coordinator.datetime",
+            FixedDateTime,
+        ),
+        patch(
+            "custom_components.eloverblik_plus.coordinator.get_instance",
+            return_value=recorder,
+        ),
+        patch(
+            "custom_components.eloverblik_plus.coordinator.clear_statistics"
+        ) as mock_clear_statistics,
+        patch(
+            "custom_components.eloverblik_plus.coordinator.async_add_external_statistics"
+        ) as mock_add_external_statistics,
+        patch.object(coordinator, "async_refresh", AsyncMock()) as mock_async_refresh,
+    ):
+        await coordinator.async_backfill_history(30)
+
+    client.async_get_latest_consumption.assert_called_once_with(
+        start_date="2026-03-01",
+        end_date="2026-04-01",
+    )
+    recorder.async_add_executor_job.assert_awaited_once_with(
+        mock_clear_statistics,
+        recorder,
+        ["eloverblik_plus:999999999999999999_hourly_consumption"],
+    )
+    mock_add_external_statistics.assert_called_once()
+    _, metadata, statistics = mock_add_external_statistics.call_args.args
+    assert (
+        metadata["statistic_id"]
+        == "eloverblik_plus:999999999999999999_hourly_consumption"
+    )
+    assert [stat["start"] for stat in statistics] == [
+        datetime(2024, 1, 1, 23, 0, tzinfo=UTC),
+        datetime(2024, 1, 2, 0, 0, tzinfo=UTC),
+    ]
+    assert [round(stat["sum"], 3) for stat in statistics] == [0.5, 0.8]
+    mock_async_refresh.assert_awaited_once()

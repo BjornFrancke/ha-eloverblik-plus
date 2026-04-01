@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import datetime, timedelta, tzinfo
 from typing import Any
 
 from homeassistant.components.sensor import (
@@ -16,6 +16,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import EloverblikConfigEntry
+from .api import LOCAL_TIME_ZONE
 from .const import ATTRIBUTION, CONF_METERING_POINT, DOMAIN
 from .coordinator import EloverblikDataUpdateCoordinator
 
@@ -33,6 +34,20 @@ async def async_setup_entry(
         [
             EloverblikEnergySensor(coordinator, metering_point),
             EloverblikLatestHourStartSensor(coordinator, metering_point),
+            EloverblikDailyConsumptionSensor(
+                coordinator,
+                metering_point,
+                offset_days=0,
+                name="Today consumption",
+                unique_suffix="today_consumption",
+            ),
+            EloverblikDailyConsumptionSensor(
+                coordinator,
+                metering_point,
+                offset_days=1,
+                name="Yesterday consumption",
+                unique_suffix="yesterday_consumption",
+            ),
         ],
     )
 
@@ -159,3 +174,44 @@ class EloverblikLatestHourStartSensor(EloverblikBaseSensor):
             "local_start": latest_hour.get("start"),
             "local_end": latest_hour.get("end"),
         }
+
+
+class EloverblikDailyConsumptionSensor(EloverblikBaseSensor):
+    """Sensor for local-day consumption totals from the fetched daily summary."""
+
+    _attr_device_class = SensorDeviceClass.ENERGY
+    _attr_native_unit_of_measurement = UnitOfEnergy.KILO_WATT_HOUR
+
+    def __init__(
+        self,
+        coordinator: EloverblikDataUpdateCoordinator,
+        metering_point: str,
+        *,
+        offset_days: int,
+        name: str,
+        unique_suffix: str,
+    ) -> None:
+        """Initialize a local-day consumption sensor."""
+        super().__init__(coordinator, metering_point)
+        self._offset_days = offset_days
+        self._attr_name = name
+        self._attr_unique_id = f"{metering_point}_{unique_suffix}"
+
+    def _get_local_date_key(self) -> str:
+        """Return the local date key to read from the daily summary."""
+        local_time_zone = getattr(self.coordinator.client, "_local_time_zone", None)
+        if not isinstance(local_time_zone, tzinfo):
+            local_time_zone = LOCAL_TIME_ZONE
+
+        now = datetime.now(local_time_zone)
+        target_date = now.date() - timedelta(days=self._offset_days)
+        return target_date.isoformat()
+
+    @property
+    def native_value(self) -> float | None:
+        """Return the consumption total for the selected local day."""
+        if self.coordinator.data is None:
+            return None
+
+        daily = self.coordinator.data.get("daily", {})
+        return daily.get(self._get_local_date_key())

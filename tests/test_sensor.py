@@ -3,9 +3,11 @@
 from __future__ import annotations
 
 from datetime import UTC, datetime
+from types import SimpleNamespace
 from unittest.mock import Mock
 
 from custom_components.eloverblik_plus.sensor import (
+    EloverblikDailyConsumptionSensor,
     EloverblikEnergySensor,
     EloverblikLatestHourStartSensor,
 )
@@ -15,6 +17,7 @@ def _build_coordinator(data: dict | None) -> Mock:
     """Create the minimal coordinator shape the entity needs."""
     coordinator = Mock()
     coordinator.data = data
+    coordinator.client = SimpleNamespace(_local_time_zone=UTC)
     coordinator.last_update_success = True
     coordinator.async_add_listener.return_value = lambda: None
     return coordinator
@@ -156,3 +159,47 @@ def test_timestamp_sensor_handles_missing_latest_hour() -> None:
         "local_start": None,
         "local_end": None,
     }
+
+
+def test_daily_consumption_sensors_expose_today_and_yesterday_totals() -> None:
+    """Test the daily summary sensors surface local-day values."""
+    sensor_today = EloverblikDailyConsumptionSensor(
+        _build_coordinator(
+            {
+                "latest_hour": None,
+                "latest_hour_kwh": None,
+                "window_total_kwh": 0.0,
+                "hourly": [],
+                "daily": {
+                    "2024-01-03": 1.4,
+                    "2024-01-02": 2.0,
+                },
+            }
+        ),
+        "999999999999999999",
+        offset_days=0,
+        name="Today consumption",
+        unique_suffix="today_consumption",
+    )
+    sensor_yesterday = EloverblikDailyConsumptionSensor(
+        sensor_today.coordinator,
+        "999999999999999999",
+        offset_days=1,
+        name="Yesterday consumption",
+        unique_suffix="yesterday_consumption",
+    )
+
+    class FixedDateTime(datetime):
+        @classmethod
+        def now(cls, tz=None):  # noqa: ANN206
+            return cls(2024, 1, 3, 12, 0, tzinfo=tz)
+
+    from custom_components.eloverblik_plus import sensor as sensor_module
+
+    original_datetime = sensor_module.datetime
+    sensor_module.datetime = FixedDateTime
+    try:
+        assert sensor_today.native_value == 1.4
+        assert sensor_yesterday.native_value == 2.0
+    finally:
+        sensor_module.datetime = original_datetime

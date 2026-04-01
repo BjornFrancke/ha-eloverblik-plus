@@ -11,9 +11,11 @@ from Eloverblik / Energinet.
 - Uses your Eloverblik refresh token and auto-discovers available metering points
 - Fetches hourly consumption data from the Eloverblik API
 - Exposes a sensor for the latest hourly consumption reading
+- Exposes native sensors for today and yesterday consumption totals
 - Ships a bundled Lovelace card for inspecting API-timestamped hourly points
 - Preserves the fetched hourly points with start/end timestamps
 - Imports hourly consumption into Home Assistant statistics for native history use
+- Includes a manual backfill service for rebuilding longer history windows
 - Supports reauthentication when your refresh token changes
 
 ## Installation
@@ -51,6 +53,8 @@ The integration creates two sensors per metering point:
 
 - `Latest hourly consumption`
 - `Latest hourly interval start`
+- `Today consumption`
+- `Yesterday consumption`
 
 `Latest hourly consumption` includes extra attributes:
 
@@ -79,6 +83,17 @@ reused natively by Home Assistant.
 `api_start_utc` and `api_end_utc` always reflect the raw API hour boundaries in
 UTC. The `start` and `end` fields are converted into the timezone configured in
 Home Assistant.
+
+## Manual Backfill
+
+To rebuild imported hourly statistics for a larger history window, call the
+`eloverblik_plus.backfill_history` service.
+
+Service fields:
+
+- `days`: Number of days of hourly history to fetch and rebuild
+- `metering_point`: Required only when multiple Eloverblik Plus entries are
+  configured
 
 ## Dashboard Card
 
