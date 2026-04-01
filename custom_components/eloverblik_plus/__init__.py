@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import TypeAlias
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
@@ -18,8 +19,6 @@ from .frontend import async_setup_frontend
 
 PLATFORMS: list[Platform] = [Platform.SENSOR]
 
-type EloverblikConfigEntry = ConfigEntry[EloverblikData]
-
 
 @dataclass
 class EloverblikData:
@@ -27,6 +26,9 @@ class EloverblikData:
 
     client: EloverblikApiClient
     coordinator: EloverblikDataUpdateCoordinator
+
+
+EloverblikConfigEntry: TypeAlias = ConfigEntry[EloverblikData]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: EloverblikConfigEntry) -> bool:
