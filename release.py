@@ -2,15 +2,18 @@
 from __future__ import annotations
 
 import argparse
+import importlib.util
 import json
 from pathlib import Path
 import re
+import shutil
 import subprocess
 import sys
 
 ROOT = Path(__file__).resolve().parent
 MANIFEST_PATH = ROOT / "custom_components" / "eloverblik_plus" / "manifest.json"
 PYPROJECT_PATH = ROOT / "pyproject.toml"
+VENV_BIN_PATH = ROOT / "venv" / "bin"
 VERSION_PATTERN = re.compile(r"^\d+\.\d+\.\d+$")
 PYELOVERBLIK_REQUIREMENT = (
     "pyeloverblik @ git+https://github.com/BjornFrancke/ha-eloverblik-plus.git@{tag}"
@@ -26,6 +29,24 @@ def run_command(
         text=True,
         capture_output=True,
         check=check,
+    )
+
+
+def resolve_tool_command(tool: str, *, module: str) -> list[str]:
+    executable = shutil.which(tool)
+    if executable is not None:
+        return [executable]
+
+    venv_executable = VENV_BIN_PATH / tool
+    if venv_executable.exists():
+        return [str(venv_executable)]
+
+    if importlib.util.find_spec(module) is not None:
+        return [sys.executable, "-m", module]
+
+    raise SystemExit(
+        f"Could not find {tool}. Install dev dependencies or activate the project "
+        "virtual environment before releasing."
     )
 
 
@@ -116,9 +137,11 @@ def run_quality_checks(*, skip_checks: bool) -> None:
         return
 
     commands = [
-        ["ruff", "check", "custom_components/", "tests/"],
-        ["ruff", "format", "--check", "custom_components/", "tests/"],
-        ["pytest"],
+        resolve_tool_command("ruff", module="ruff")
+        + ["check", "custom_components/", "tests/"],
+        resolve_tool_command("ruff", module="ruff")
+        + ["format", "--check", "custom_components/", "tests/"],
+        resolve_tool_command("pytest", module="pytest"),
     ]
 
     for command in commands:
