@@ -3,6 +3,8 @@
 Home Assistant custom integration for fetching Danish electricity consumption data
 from Eloverblik / Energinet.
 
+![Eloverblik Plus preview](ha-eloverblik-plus-img.png)
+
 ## Features
 
 - Config flow setup from the Home Assistant UI
