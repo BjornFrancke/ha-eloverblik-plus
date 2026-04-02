@@ -660,10 +660,27 @@ class EloverblikHourlyCard extends HTMLElement {
         }
 
         const rows = response?.[statisticId] || [];
+        let previousSum = null;
         this._comparisonData = rows
           .map((row) => {
             const apiStartMs = this._parseDate(row.start);
-            const kwh = Number(row.state);
+            const rowState = Number(row.state);
+            const rowChange = Number(row.change);
+            const rowSum = Number(row.sum);
+            let kwh = rowState;
+            if (!Number.isFinite(kwh) && Number.isFinite(rowChange)) {
+              kwh = rowChange;
+            }
+            if (
+              !Number.isFinite(kwh) &&
+              Number.isFinite(rowSum) &&
+              Number.isFinite(previousSum)
+            ) {
+              kwh = rowSum - previousSum;
+            }
+            if (Number.isFinite(rowSum)) {
+              previousSum = rowSum;
+            }
             if (!Number.isFinite(apiStartMs) || !Number.isFinite(kwh)) {
               return null;
             }

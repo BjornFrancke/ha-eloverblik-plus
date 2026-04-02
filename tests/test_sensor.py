@@ -10,6 +10,8 @@ from custom_components.eloverblik_plus.sensor import (
     EloverblikDailyConsumptionSensor,
     EloverblikEnergySensor,
     EloverblikLatestHourStartSensor,
+    MAX_DAILY_ATTRIBUTE_POINTS,
+    MAX_HOURLY_ATTRIBUTE_POINTS,
 )
 
 
@@ -203,3 +205,45 @@ def test_daily_consumption_sensors_expose_today_and_yesterday_totals() -> None:
         assert sensor_yesterday.native_value == 2.0
     finally:
         sensor_module.datetime = original_datetime
+
+
+def test_sensor_limits_large_attribute_payloads() -> None:
+    """Test large hourly/daily payloads are trimmed to HA-safe sizes."""
+    hourly = []
+    for index in range(120):
+        hour_start = datetime(2024, 1, 1, 0, 0, tzinfo=UTC).timestamp() + index * 3600
+        hour_end = hour_start + 3600
+        hourly.append(
+            {
+                "api_start_utc": datetime.fromtimestamp(hour_start, tz=UTC)
+                .isoformat()
+                .replace("+00:00", "Z"),
+                "api_end_utc": datetime.fromtimestamp(hour_end, tz=UTC)
+                .isoformat()
+                .replace("+00:00", "Z"),
+                "start": datetime.fromtimestamp(hour_start, tz=UTC).isoformat(),
+                "end": datetime.fromtimestamp(hour_end, tz=UTC).isoformat(),
+                "kwh": 0.5,
+            }
+        )
+
+    daily = {f"2024-01-{day:02d}": float(day) for day in range(1, 51)}
+    sensor = EloverblikEnergySensor(
+        _build_coordinator(
+            {
+                "latest_hour": hourly[-1],
+                "latest_hour_kwh": 0.5,
+                "window_total_kwh": 12.3,
+                "hourly": hourly,
+                "daily": daily,
+            }
+        ),
+        "999999999999999999",
+    )
+
+    attributes = sensor.extra_state_attributes
+    assert attributes is not None
+    assert len(attributes["hourly_data"]) == MAX_HOURLY_ATTRIBUTE_POINTS
+    assert attributes["hourly_data"][-1] == hourly[-1]
+    assert len(attributes["daily_data"]) == MAX_DAILY_ATTRIBUTE_POINTS
+    assert list(attributes["daily_data"].keys())[-1] == "2024-01-50"

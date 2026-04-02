@@ -20,6 +20,9 @@ from .api import LOCAL_TIME_ZONE
 from .const import ATTRIBUTION, CONF_METERING_POINT, DOMAIN
 from .coordinator import EloverblikDataUpdateCoordinator
 
+MAX_HOURLY_ATTRIBUTE_POINTS = 96
+MAX_DAILY_ATTRIBUTE_POINTS = 32
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -107,7 +110,10 @@ class EloverblikEnergySensor(EloverblikBaseSensor):
 
         latest_hour = self.coordinator.data.get("latest_hour")
         hourly = self.coordinator.data.get("hourly", [])
+        hourly_limited = hourly[-MAX_HOURLY_ATTRIBUTE_POINTS:]
         daily = self.coordinator.data.get("daily", {})
+        daily_items = sorted(daily.items())
+        daily_limited = dict(daily_items[-MAX_DAILY_ATTRIBUTE_POINTS:])
         return {
             "metering_point": self._metering_point,
             "latest_hour_api_start_utc": (
@@ -119,8 +125,8 @@ class EloverblikEnergySensor(EloverblikBaseSensor):
             "latest_hour_start": latest_hour.get("start") if latest_hour else None,
             "latest_hour_end": latest_hour.get("end") if latest_hour else None,
             "window_total_kwh": self.coordinator.data.get("window_total_kwh"),
-            "hourly_data": hourly,
-            "daily_data": daily,
+            "hourly_data": hourly_limited,
+            "daily_data": daily_limited,
         }
 
 
