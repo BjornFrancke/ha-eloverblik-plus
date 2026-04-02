@@ -3,6 +3,9 @@
 Home Assistant custom integration for fetching Danish electricity consumption data
 from Eloverblik / Energinet.
 
+![GitHub last commit](https://img.shields.io/github/last-commit/BjornFrancke/ha-eloverblik-plus)
+![GitHub Release](https://img.shields.io/github/v/release/BjornFrancke/ha-eloverblik-plus)
+
 ![Eloverblik Plus preview](ha-eloverblik-plus-img.png)
 
 ## Features
@@ -21,6 +24,8 @@ from Eloverblik / Energinet.
 ## Installation
 
 ### HACS
+
+[![Open your Home Assistant instance and open a repository inside the Home Assistant Community Store.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=BjornFrancke&repository=ha-eloverblik-plus&category=integration)
 
 1. Open HACS in Home Assistant.
 2. Add this repository as a custom repository.
